@@ -7,97 +7,6 @@
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&amp;display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
-<script id="tailwind-config">
-        tailwind.config = {
-            darkMode: "class",
-            theme: {
-                extend: {
-                    colors: {
-                        "on-surface-variant": "#434655",
-                        "on-secondary": "#ffffff",
-                        "inverse-surface": "#2e3039",
-                        "error-container": "#ffdad6",
-                        "on-secondary-container": "#006172",
-                        "surface": "#faf8ff",
-                        "on-error": "#ffffff",
-                        "tertiary": "#6a1edb",
-                        "surface-container-high": "#e7e7f3",
-                        "on-tertiary-fixed-variant": "#5a00c6",
-                        "tertiary-fixed-dim": "#d2bbff",
-                        "secondary-fixed-dim": "#4cd7f6",
-                        "on-tertiary": "#ffffff",
-                        "outline-variant": "#c3c6d7",
-                        "on-tertiary-fixed": "#25005a",
-                        "on-primary-fixed-variant": "#003ea8",
-                        "on-tertiary-container": "#f7edff",
-                        "surface-container-lowest": "#ffffff",
-                        "surface-bright": "#faf8ff",
-                        "secondary-fixed": "#acedff",
-                        "surface-container-highest": "#e1e2ed",
-                        "primary-container": "#2563eb",
-                        "primary-fixed-dim": "#b4c5ff",
-                        "secondary": "#00687a",
-                        "background": "#faf8ff",
-                        "tertiary-fixed": "#eaddff",
-                        "inverse-primary": "#b4c5ff",
-                        "error": "#ba1a1a",
-                        "primary": "#004ac6",
-                        "outline": "#737686",
-                        "on-surface": "#191b23",
-                        "on-secondary-fixed": "#001f26",
-                        "on-primary-container": "#eeefff",
-                        "on-primary-fixed": "#00174b",
-                        "surface-variant": "#e1e2ed",
-                        "inverse-on-surface": "#f0f0fb",
-                        "on-primary": "#ffffff",
-                        "surface-container": "#ededf9",
-                        "on-secondary-fixed-variant": "#004e5c",
-                        "surface-tint": "#0053db",
-                        "primary-fixed": "#dbe1ff",
-                        "tertiary-container": "#8343f4",
-                        "secondary-container": "#57dffe",
-                        "surface-container-low": "#f3f3fe",
-                        "on-background": "#191b23",
-                        "surface-dim": "#d9d9e5",
-                        "on-error-container": "#93000a"
-                    },
-                    borderRadius: {
-                        "DEFAULT": "0.25rem",
-                        "lg": "0.5rem",
-                        "xl": "0.75rem",
-                        "full": "9999px"
-                    },
-                    spacing: {
-                        "section-padding-mobile": "64px",
-                        "container-max": "1280px",
-                        "unit": "8px",
-                        "gutter": "32px",
-                        "section-padding": "120px"
-                    },
-                    fontFamily: {
-                        "hero-display": ["Inter", "sans-serif"],
-                        "body-md": ["Inter", "sans-serif"],
-                        "h3": ["Inter", "sans-serif"],
-                        "h1": ["Inter", "sans-serif"],
-                        "h2": ["Inter", "sans-serif"],
-                        "body-lg": ["Inter", "sans-serif"],
-                        "hero-display-mobile": ["Inter", "sans-serif"],
-                        "label-caps": ["Inter", "sans-serif"]
-                    },
-                    fontSize: {
-                        "hero-display": ["80px", { lineHeight: "1.1", letterSpacing: "-0.04em", fontWeight: "800" }],
-                        "body-md": ["16px", { lineHeight: "1.6", letterSpacing: "0em", fontWeight: "400" }],
-                        "h3": ["24px", { lineHeight: "1.3", letterSpacing: "-0.01em", fontWeight: "600" }],
-                        "h1": ["48px", { lineHeight: "1.2", letterSpacing: "-0.02em", fontWeight: "700" }],
-                        "h2": ["36px", { lineHeight: "1.2", letterSpacing: "-0.02em", fontWeight: "700" }],
-                        "body-lg": ["20px", { lineHeight: "1.6", letterSpacing: "0em", fontWeight: "400" }],
-                        "hero-display-mobile": ["48px", { lineHeight: "1.1", letterSpacing: "-0.03em", fontWeight: "800" }],
-                        "label-caps": ["12px", { lineHeight: "1.0", letterSpacing: "0.05em", fontWeight: "600" }]
-                    }
-                }
-            }
-        }
-    </script>
 <style>
         .reveal {
             opacity: 0;
@@ -119,10 +28,10 @@
         }
         
         .glass-card {
-            background: rgba(255, 255, 255, 0.7);
+            background: rgba(255, 255, 255, 0.75);
             backdrop-filter: blur(24px);
             -webkit-backdrop-filter: blur(24px);
-            border: 1px solid rgba(255, 255, 255, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.5);
             border-bottom-color: rgba(15, 23, 42, 0.05);
             border-right-color: rgba(15, 23, 42, 0.05);
             box-shadow: 0 20px 40px rgba(15, 23, 42, 0.08);
@@ -167,114 +76,85 @@
         }
     </style>
 </head>
-<body class="bg-background text-on-background font-body-md antialiased overflow-x-hidden selection:bg-primary-container selection:text-on-primary-container">
+<body class="bg-[#faf8ff] text-[#191b23] font-sans antialiased overflow-x-hidden selection:bg-[#2563eb] selection:text-white min-h-screen">
 <div id="mouse-glow"></div>
 <!-- TopNavBar -->
-<nav class="fixed top-0 w-full z-50 bg-surface/70 dark:bg-inverse-surface/70 backdrop-blur-xl border-b border-white/40 dark:border-white/10 shadow-sm transition-all duration-300" id="navbar">
-<div class="flex justify-between items-center max-w-container-max mx-auto px-gutter py-4">
-<div class="font-h3 text-h3 font-bold text-primary dark:text-secondary-fixed">
-                NexClinic
+<nav class="fixed top-0 w-full z-50 bg-[#faf8ff]/80 backdrop-blur-xl border-b border-white/40 shadow-xs transition-all duration-300" id="navbar">
+<div class="flex justify-between items-center max-w-7xl mx-auto px-6 py-4">
+<a href="#" class="flex items-center gap-2.5">
+<div class="w-9 h-9 rounded-xl bg-gradient-brand text-white flex items-center justify-center font-bold text-base shadow-sm">
+              ✦
             </div>
-<div class="hidden md:flex items-center gap-8">
-<a class="font-body-md text-body-md text-primary dark:text-secondary-fixed font-semibold border-b-2 border-primary dark:border-secondary-fixed pb-1" href="#">Product</a>
-<a class="font-body-md text-body-md text-on-surface-variant dark:text-on-surface-variant hover:text-primary dark:hover:text-secondary-fixed transition-colors duration-300" href="#">Solutions</a>
-<a class="font-body-md text-body-md text-on-surface-variant dark:text-on-surface-variant hover:text-primary dark:hover:text-secondary-fixed transition-colors duration-300" href="#">Features</a>
-<a class="font-body-md text-body-md text-on-surface-variant dark:text-on-surface-variant hover:text-primary dark:hover:text-secondary-fixed transition-colors duration-300" href="#">AI</a>
-<a class="font-body-md text-body-md text-on-surface-variant dark:text-on-surface-variant hover:text-primary dark:hover:text-secondary-fixed transition-colors duration-300" href="#">Pricing</a>
+<span class="text-2xl font-extrabold text-[#004ac6] tracking-tight">NexClinic</span>
+</a>
+
+<div class="hidden md:flex items-center gap-8 text-sm font-semibold text-[#434655]">
+<a href="#features" class="hover:text-[#004ac6] transition">Features</a>
+<a href="#solutions" class="hover:text-[#004ac6] transition">Solutions</a>
+<a href="#ai-suite" class="hover:text-[#004ac6] transition">AI Suite</a>
+<a href="#pricing" class="hover:text-[#004ac6] transition">Pricing</a>
+<a href="#faq" class="hover:text-[#004ac6] transition">FAQ</a>
 </div>
+
 <div class="flex items-center gap-4">
-<button class="hidden md:block font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors font-medium">Login</button>
-<button class="bg-gradient-brand text-white px-6 py-2.5 rounded-lg font-medium shadow-md hover:shadow-lg scale-102 hover:opacity-90 transition-transform duration-200">Get Started</button>
+<a href="/login" class="hidden md:block text-sm font-semibold text-[#434655] hover:text-[#004ac6] transition">
+              Sign In
+            </a>
+<a href="/dashboard" className="bg-gradient-brand text-white px-6 py-2.5 rounded-xl font-bold text-xs shadow-md hover:shadow-lg transition-transform duration-200">
+              Explore Portal
+            </a>
 </div>
 </div>
 </nav>
-<!-- Hero Section -->
-<header class="relative pt-32 pb-24 md:pt-48 md:pb-section-padding min-h-[90vh] flex items-center overflow-hidden bg-primary/5">
-<div class="absolute inset-0 z-0 opacity-40">
 
-</div>
-<div class="max-w-container-max mx-auto px-gutter relative z-10 w-full">
+<!-- Hero Section -->
+<header class="relative pt-32 pb-24 md:pt-44 md:pb-28 min-h-[90vh] flex items-center overflow-hidden bg-[#004ac6]/5">
+<div class="max-w-7xl mx-auto px-6 relative z-10 w-full">
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-<div class="reveal active">
-<div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-surface-container-high border border-outline-variant/30 mb-8">
-<span class="text-primary">✦</span>
-<span class="font-label-caps text-label-caps text-on-surface-variant tracking-wider uppercase">AI-powered clinic management</span>
+<div class="reveal active space-y-6">
+<div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#e7e7f3] border border-[#c3c6d7]/30 shadow-xs">
+<span class="text-[#004ac6]">✦</span>
+<span class="text-xs font-bold text-[#434655] uppercase tracking-wider">AI-Powered Clinic Management v2.4</span>
 </div>
-<h1 class="font-hero-display-mobile md:font-hero-display text-hero-display-mobile md:text-hero-display text-on-background mb-6">
-                        Healthcare management, reimagined with <span class="text-primary">AI</span>.
-                    </h1>
-<p class="font-body-lg text-body-lg text-on-surface-variant mb-10 max-w-xl">
-                        NexClinic brings patients, doctors, and operational data into one beautifully connected platform, powered by advanced artificial intelligence.
-                    </p>
-<div class="flex flex-col sm:flex-row gap-4">
-<button class="text-white px-8 py-4 rounded-xl font-medium shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-300 bg-primary">Get Started</button>
-<button class="px-8 py-4 rounded-xl font-medium border border-outline-variant text-on-surface hover:bg-surface-container-low transition-colors duration-300 flex items-center justify-center gap-2">
-                            Explore NexClinic
-                            <span class="material-symbols-outlined text-sm">arrow_forward</span>
-</button>
+
+<h1 class="text-5xl md:text-7xl font-extrabold text-[#191b23] leading-tight tracking-tight">
+                Healthcare management, reimagined with <span class="text-gradient">AI</span>.
+              </h1>
+
+<p class="text-base md:text-lg text-[#434655] max-w-xl leading-relaxed font-medium">
+                NexClinic brings patients, doctors, EMR records, and VNPay billing into one beautifully connected platform, powered by Gemini artificial intelligence.
+              </p>
+
+<div class="flex flex-col sm:flex-row gap-4 pt-2">
+<a href="/login" class="text-white px-8 py-4 rounded-2xl font-bold text-xs shadow-xl hover:shadow-2xl hover:scale-[1.02] transition-all duration-300 bg-[#004ac6] text-center flex items-center justify-center gap-2">
+                  Start Free Trial
+                </a>
+<a href="/dashboard" class="px-8 py-4 rounded-2xl font-bold text-xs border border-[#c3c6d7] text-[#191b23] hover:bg-[#f3f3fe] transition-colors duration-300 flex items-center justify-center gap-2">
+                  View Live Portal Demo
+                </a>
 </div>
 </div>
-<div class="relative reveal floating lg:h-[600px] flex items-center justify-center active" style="perspective: 1000px;">
-<!-- Dashboard Preview Graphic -->
-<div class="glass-card w-full max-w-lg rounded-2xl p-6 relative z-10 transition-transform duration-500 [transform:rotateY(-20deg)_rotateX(10deg)] hover:[transform:rotateY(0deg)_rotateX(0deg)_scale(1.02)]">
-<div class="flex justify-between items-center mb-6">
+
+<div class="relative reveal floating lg:h-[580px] flex items-center justify-center active" style="perspective: 1000px;">
+<div class="glass-card w-full max-w-lg rounded-3xl p-6 relative z-10 space-y-5">
+<div class="flex justify-between items-center pb-4 border-b border-[#c3c6d7]/20">
 <div>
-<h3 class="font-h3 text-h3 text-on-background">Good morning, Admin 👋</h3>
-<p class="text-on-surface-variant text-sm">Here's your clinic overview for today.</p>
+<h3 class="text-xl font-extrabold text-[#191b23]">Good morning, Admin 👋</h3>
+<p class="text-[#434655] text-xs font-medium">Here's your clinic operational summary today.</p>
 </div>
-<div class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center">
-<span class="material-symbols-outlined text-on-surface">notifications</span>
-</div>
-</div>
-<div class="grid grid-cols-2 gap-4 mb-6">
-<div class="bg-surface rounded-xl p-4 border border-outline-variant/20">
-<p class="text-on-surface-variant text-sm mb-1">Total Patients</p>
-<p class="font-h2 text-h2 text-on-background">1,248</p>
-</div>
-<div class="bg-surface rounded-xl p-4 border border-outline-variant/20">
-<p class="text-on-surface-variant text-sm mb-1">Active Doctors</p>
-<p class="font-h2 text-h2 text-on-background">24</p>
+<div class="w-10 h-10 rounded-2xl bg-[#e7e7f3] flex items-center justify-center text-[#191b23]">
+<span class="material-symbols-outlined text-base">notifications</span>
 </div>
 </div>
-<div class="bg-surface rounded-xl border border-outline-variant/20 overflow-hidden">
-<div class="px-4 py-3 border-b border-outline-variant/20 bg-surface-container-low">
-<p class="font-medium text-sm">Upcoming Appointments</p>
+
+<div class="grid grid-cols-2 gap-4">
+<div class="bg-white/90 rounded-2xl p-4 border border-[#c3c6d7]/20 shadow-xs">
+<p class="text-[#434655] text-xs font-semibold mb-1">Total Patients</p>
+<p class="text-3xl font-extrabold text-[#191b23]">1,248</p>
 </div>
-<div class="p-4 space-y-4">
-<div class="flex items-center gap-3">
-<div class="w-8 h-8 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center text-xs font-medium">JD</div>
-<div class="flex-1">
-<p class="text-sm font-medium">John Doe</p>
-<p class="text-xs text-on-surface-variant">General Checkup</p>
-</div>
-<div class="text-right">
-<p class="text-sm font-medium">09:00 AM</p>
-<p class="text-xs text-success">Confirmed</p>
-</div>
-</div>
-<div class="flex items-center gap-3">
-<div class="w-8 h-8 rounded-full bg-tertiary-container text-on-tertiary-container flex items-center justify-center text-xs font-medium">AS</div>
-<div class="flex-1">
-<p class="text-sm font-medium">Alice Smith</p>
-<p class="text-xs text-on-surface-variant">Cardiology</p>
-</div>
-<div class="text-right">
-<p class="text-sm font-medium">10:30 AM</p>
-<p class="text-xs text-on-surface-variant">Waiting</p>
-</div>
-</div>
-</div>
-</div>
-</div>
-<!-- Floating AI Card -->
-<div class="absolute -bottom-8 -right-4 md:-right-12 glass-card rounded-xl p-4 z-20 max-w-[280px] shadow-2xl floating" style="animation-delay: -3s;">
-<div class="flex items-start gap-3">
-<div class="w-8 h-8 rounded-lg text-on-tertiary flex items-center justify-center shrink-0 bg-primary">
-<span class="material-symbols-outlined text-sm">auto_awesome</span>
-</div>
-<div>
-<p class="font-medium text-sm mb-1">✨ NexAI Insights</p>
-<p class="text-xs text-on-surface-variant leading-relaxed">Summarized 14 patient records from yesterday. Identified 3 critical follow-ups needed for Dr. Sarah.</p>
+<div class="bg-white/90 rounded-2xl p-4 border border-[#c3c6d7]/20 shadow-xs">
+<p class="text-[#434655] text-xs font-semibold mb-1">Active Doctors</p>
+<p class="text-3xl font-extrabold text-[#191b23]">24</p>
 </div>
 </div>
 </div>
@@ -282,162 +162,5 @@
 </div>
 </div>
 </header>
-<!-- Social Proof -->
-<section class="py-12 border-y border-outline-variant/20 bg-surface-container-lowest overflow-hidden">
-<div class="max-w-container-max mx-auto px-gutter mb-8 text-center">
-<p class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest">Trusted by teams building the future of healthcare</p>
-</div>
-<div class="relative w-full overflow-hidden">
-<div class="flex gap-16 items-center w-max animate-marquee opacity-60 grayscale">
-<!-- Repeated for infinite scroll effect -->
-<h3 class="font-h3 text-h3 font-bold text-on-surface">MediCore</h3>
-<h3 class="font-h3 text-h3 font-bold text-on-surface">HealthPlus</h3>
-<h3 class="font-h3 text-h3 font-bold text-on-surface">CareConnect</h3>
-<h3 class="font-h3 text-h3 font-bold text-on-surface">Vitality Systems</h3>
-<h3 class="font-h3 text-h3 font-bold text-on-surface">NovaHealth</h3>
-<h3 class="font-h3 text-h3 font-bold text-on-surface">MediCore</h3>
-<h3 class="font-h3 text-h3 font-bold text-on-surface">HealthPlus</h3>
-<h3 class="font-h3 text-h3 font-bold text-on-surface">CareConnect</h3>
-<h3 class="font-h3 text-h3 font-bold text-on-surface">Vitality Systems</h3>
-<h3 class="font-h3 text-h3 font-bold text-on-surface">NovaHealth</h3>
-</div>
-</div>
-</section>
-<!-- Features Bento Grid -->
-<section class="py-section-padding bg-surface">
-<div class="max-w-container-max mx-auto px-gutter">
-<div class="text-center mb-16 reveal active">
-<h2 class="font-h2 text-h2 text-on-background mb-4">Everything you need to run your clinic</h2>
-<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl mx-auto">A unified platform designed for modern healthcare providers.</p>
-</div>
-<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-<!-- Feature 1 -->
-<div class="bg-surface-container-lowest rounded-2xl p-8 border border-outline-variant/30 reveal hover:shadow-lg transition-shadow duration-300 flex flex-col h-full md:col-span-2 active">
-<div class="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center mb-6">
-<span class="material-symbols-outlined">patient_list</span>
-</div>
-<h3 class="font-h3 text-h3 text-on-background mb-3">Patient Management</h3>
-<p class="text-on-surface-variant mb-6 flex-1">Complete patient profiles, medical histories, and treatment plans in one accessible, secure location.</p>
-<div class="mt-auto relative h-48 bg-surface-container rounded-xl overflow-hidden border border-outline-variant/20 flex items-center justify-center">
-<div class="text-on-surface-variant/50 flex flex-col items-center">
-<span class="material-symbols-outlined text-4xl mb-2">person</span>
-<span class="">Patient UI Preview</span>
-</div>
-</div>
-</div>
-<!-- Feature 2 -->
-<div class="bg-surface-container-lowest rounded-2xl p-8 border border-outline-variant/30 reveal hover:shadow-lg transition-shadow duration-300 flex flex-col h-full active">
-<div class="w-12 h-12 rounded-xl bg-tertiary/10 text-tertiary flex items-center justify-center mb-6">
-<span class="material-symbols-outlined">auto_awesome</span>
-</div>
-<h3 class="font-h3 text-h3 text-on-background mb-3">NexAI Assistant</h3>
-<p class="text-on-surface-variant mb-6 flex-1">Smart medical summaries, predictive insights, and automated documentation.</p>
-<div class="mt-auto relative h-32 bg-surface-container rounded-xl overflow-hidden border border-outline-variant/20 flex items-center justify-center">
-<div class="text-on-surface-variant/50 flex flex-col items-center">
-<span class="material-symbols-outlined text-3xl mb-1">chat</span>
-</div>
-</div>
-</div>
-<!-- Feature 3 -->
-<div class="bg-surface-container-lowest rounded-2xl p-8 border border-outline-variant/30 reveal hover:shadow-lg transition-shadow duration-300 flex flex-col h-full active">
-<div class="w-12 h-12 rounded-xl bg-secondary/10 text-secondary flex items-center justify-center mb-6">
-<span class="material-symbols-outlined">event_available</span>
-</div>
-<h3 class="font-h3 text-h3 text-on-background mb-3">Smart Scheduling</h3>
-<p class="text-on-surface-variant mb-6 flex-1">Intelligent calendar management that reduces no-shows and optimizes doctor time.</p>
-</div>
-<!-- Feature 4 -->
-<div class="bg-surface-container-lowest rounded-2xl p-8 border border-outline-variant/30 reveal hover:shadow-lg transition-shadow duration-300 flex flex-col h-full md:col-span-2 active">
-<div class="w-12 h-12 rounded-xl bg-primary-container text-on-primary-container flex items-center justify-center mb-6">
-<span class="material-symbols-outlined">analytics</span>
-</div>
-<h3 class="font-h3 text-h3 text-on-background mb-3">Clinical Insights</h3>
-<p class="text-on-surface-variant mb-6 flex-1">Advanced reporting on clinic performance, financial health, and patient outcomes.</p>
-<div class="mt-auto relative h-48 bg-surface-container rounded-xl overflow-hidden border border-outline-variant/20 flex items-center justify-center">
-<div class="text-on-surface-variant/50 flex flex-col items-center">
-<span class="material-symbols-outlined text-4xl mb-2">bar_chart</span>
-<span class="">Dashboard UI Preview</span>
-</div>
-</div>
-</div>
-</div>
-</div>
-</section>
-<!-- Footer -->
-<footer class="w-full border-t border-outline-variant/30 bg-surface-container dark:bg-inverse-surface">
-<div class="max-w-container-max mx-auto px-gutter py-section-padding grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-8">
-<div class="col-span-2 md:col-span-4 lg:col-span-2">
-<span class="font-h2 text-h2 font-extrabold text-primary dark:text-secondary-fixed mb-6 block">NexClinic</span>
-<p class="font-body-md text-body-md text-on-surface-variant dark:text-on-surface-variant mb-6">
-                    © 2024 NexClinic. Precision medicine through AI innovation.
-                </p>
-</div>
-<div class="col-span-1">
-<h4 class="font-medium text-on-surface dark:text-inverse-on-surface mb-4">Product</h4>
-<ul class="space-y-3">
-<li class=""><a class="font-body-md text-body-md text-on-surface-variant dark:text-on-surface-variant hover:text-primary dark:hover:text-secondary-fixed transition-colors" href="#">Product</a></li>
-<li class=""><a class="font-body-md text-body-md text-on-surface-variant dark:text-on-surface-variant hover:text-primary dark:hover:text-secondary-fixed transition-colors" href="#">Solutions</a></li>
-<li class=""><a class="font-body-md text-body-md text-on-surface-variant dark:text-on-surface-variant hover:text-primary dark:hover:text-secondary-fixed transition-colors" href="#">Features</a></li>
-<li class=""><a class="font-body-md text-body-md text-on-surface-variant dark:text-on-surface-variant hover:text-primary dark:hover:text-secondary-fixed transition-colors" href="#">AI</a></li>
-</ul>
-</div>
-<div class="col-span-1">
-<h4 class="font-medium text-on-surface dark:text-inverse-on-surface mb-4">Company</h4>
-<ul class="space-y-3">
-<li class=""><a class="font-body-md text-body-md text-on-surface-variant dark:text-on-surface-variant hover:text-primary dark:hover:text-secondary-fixed transition-colors" href="#">Pricing</a></li>
-<li class=""><a class="font-body-md text-body-md text-on-surface-variant dark:text-on-surface-variant hover:text-primary dark:hover:text-secondary-fixed transition-colors" href="#">About Us</a></li>
-<li class=""><a class="font-body-md text-body-md text-on-surface-variant dark:text-on-surface-variant hover:text-primary dark:hover:text-secondary-fixed transition-colors" href="#">Careers</a></li>
-</ul>
-</div>
-<div class="col-span-2 lg:col-span-1">
-<h4 class="font-medium text-on-surface dark:text-inverse-on-surface mb-4">Legal</h4>
-<ul class="space-y-3">
-<li class=""><a class="font-body-md text-body-md text-on-surface-variant dark:text-on-surface-variant hover:text-primary dark:hover:text-secondary-fixed transition-colors" href="#">Privacy Policy</a></li>
-<li class=""><a class="font-body-md text-body-md text-on-surface-variant dark:text-on-surface-variant hover:text-primary dark:hover:text-secondary-fixed transition-colors" href="#">Terms of Service</a></li>
-<li class=""><a class="font-body-md text-body-md text-on-surface-variant dark:text-on-surface-variant hover:text-primary dark:hover:text-secondary-fixed transition-colors" href="#">Security</a></li>
-</ul>
-</div>
-</div>
-</footer>
-<script>
-        // Scroll Reveal Logic
-        document.addEventListener("DOMContentLoaded", () => {
-            const reveals = document.querySelectorAll(".reveal");
-            
-            const revealOnScroll = () => {
-                const windowHeight = window.innerHeight;
-                const elementVisible = 100;
-                
-                reveals.forEach((reveal) => {
-                    const elementTop = reveal.getBoundingClientRect().top;
-                    if (elementTop < windowHeight - elementVisible) {
-                        reveal.classList.add("active");
-                    }
-                });
-            };
-            
-            window.addEventListener("scroll", revealOnScroll);
-            revealOnScroll(); // Trigger on load
-            
-            // Navbar blur effect on scroll
-            const navbar = document.getElementById('navbar');
-            window.addEventListener('scroll', () => {
-                if (window.scrollY > 20) {
-                    navbar.classList.add('shadow-md');
-                } else {
-                    navbar.classList.remove('shadow-md');
-                }
-            });
-            
-            // Mouse Follow Glow (Desktop only)
-            const glow = document.getElementById('mouse-glow');
-            if (window.matchMedia("(min-width: 768px)").matches) {
-                document.addEventListener('mousemove', (e) => {
-                    glow.style.left = e.clientX + 'px';
-                    glow.style.top = e.clientY + 'px';
-                });
-            }
-        });
-    </script>
 </body>
 </html>
