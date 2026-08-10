@@ -44,88 +44,10 @@ export default function Home() {
     };
     document.addEventListener('mousemove', handleMouseMove, { passive: true });
 
-    // WebGL Shader Background Animation
-    const canvas = document.getElementById('shader-canvas-ANIMATION_11') as HTMLCanvasElement | null;
-    let animFrameId: number;
-
-    if (canvas) {
-      const syncSize = () => {
-        const w = canvas.clientWidth || 1280;
-        const h = canvas.clientHeight || 720;
-        if (canvas.width !== w || canvas.height !== h) {
-          canvas.width = w;
-          canvas.height = h;
-        }
-      };
-      syncSize();
-
-      const gl = (canvas.getContext('webgl') || canvas.getContext('experimental-webgl')) as WebGLRenderingContext | null;
-      if (gl) {
-        const vs = `attribute vec2 a_position;
-varying vec2 v_texCoord;
-void main() {
-  v_texCoord = a_position * 0.5 + 0.5;
-  gl_Position = vec4(a_position, 0.0, 1.0);
-}`;
-        const fs = `precision highp float;
-uniform float u_time;
-uniform vec2 u_resolution;
-varying vec2 v_texCoord;
-
-void main() {
-    vec2 uv = v_texCoord;
-    float noise1 = sin(uv.x * 2.0 + u_time * 0.2) * 0.5 + 0.5;
-    float noise2 = cos(uv.y * 3.0 - u_time * 0.15) * 0.5 + 0.5;
-    vec3 color1 = vec3(0.145, 0.388, 0.922);
-    vec3 color2 = vec3(0.024, 0.714, 0.831);
-    vec3 color3 = vec3(0.486, 0.227, 0.929);
-    float mixFactor = (noise1 + noise2) * 0.5;
-    vec3 baseColor = mix(color1, color2, mixFactor);
-    baseColor = mix(baseColor, color3, sin(u_time * 0.1) * 0.2 + 0.2);
-    float grid = (step(0.995, fract(uv.x * 20.0)) + step(0.995, fract(uv.y * 20.0)));
-    float dist = distance(uv, vec2(0.5));
-    float vignette = 1.0 - smoothstep(0.3, 1.2, dist);
-    gl_FragColor = vec4(baseColor * vignette + (grid * 0.05), 1.0);
-}`;
-        const cs = (type: number, src: string) => {
-          const s = gl.createShader(type)!;
-          gl.shaderSource(s, src);
-          gl.compileShader(s);
-          return s;
-        };
-        const prog = gl.createProgram()!;
-        gl.attachShader(prog, cs(gl.VERTEX_SHADER, vs));
-        gl.attachShader(prog, cs(gl.FRAGMENT_SHADER, fs));
-        gl.linkProgram(prog);
-        gl.useProgram(prog);
-
-        const buf = gl.createBuffer();
-        gl.bindBuffer(gl.ARRAY_BUFFER, buf);
-        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, 1,1]), gl.STATIC_DRAW);
-        const pos = gl.getAttribLocation(prog, 'a_position');
-        gl.enableVertexAttribArray(pos);
-        gl.vertexAttribPointer(pos, 2, gl.FLOAT, false, 0, 0);
-
-        const uTime = gl.getUniformLocation(prog, 'u_time');
-        const uRes = gl.getUniformLocation(prog, 'u_resolution');
-
-        const render = (t: number) => {
-          syncSize();
-          gl.viewport(0, 0, canvas.width, canvas.height);
-          if (uTime) gl.uniform1f(uTime, t * 0.001);
-          if (uRes) gl.uniform2f(uRes, canvas.width, canvas.height);
-          gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-          animFrameId = requestAnimationFrame(render);
-        };
-        render(0);
-      }
-    }
-
     return () => {
       window.removeEventListener('scroll', revealOnScroll);
       window.removeEventListener('scroll', handleNavScroll);
       document.removeEventListener('mousemove', handleMouseMove);
-      if (animFrameId) cancelAnimationFrame(animFrameId);
     };
   }, []);
 
@@ -231,27 +153,23 @@ void main() {
       </nav>
 
       {/* Hero Section */}
-      <header className="relative pt-32 pb-24 md:pt-48 md:pb-32 min-h-[90vh] flex items-center overflow-hidden">
-        <div className="absolute inset-0 z-0 opacity-40">
-          <div className="absolute inset-0 w-full h-full">
-            <canvas id="shader-canvas-ANIMATION_11" className="w-full h-full block" />
-          </div>
-        </div>
+      <header className="relative pt-32 pb-24 md:pt-48 md:pb-32 min-h-[90vh] flex items-center overflow-hidden bg-[#004ac6]/5">
+        <div className="absolute inset-0 z-0 opacity-40"></div>
         <div className="max-w-7xl mx-auto px-6 relative z-10 w-full">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             <div className="reveal active">
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#e7e7f3] border border-[#c3c6d7]/30 mb-8">
-                <span className="text-[#6a1edb]">✦</span>
+                <span className="text-[#004ac6]">✦</span>
                 <span className="text-xs font-semibold text-[#434655] uppercase tracking-wider">AI-powered clinic management</span>
               </div>
               <h1 className="text-5xl md:text-7xl font-extrabold text-[#191b23] mb-6 leading-tight">
-                Healthcare management, reimagined with <span className="text-gradient">AI</span>.
+                Healthcare management, reimagined with <span className="text-[#004ac6]">AI</span>.
               </h1>
               <p className="text-lg text-[#434655] mb-10 max-w-xl leading-relaxed">
                 NexClinic brings patients, doctors, and operational data into one beautifully connected platform, powered by advanced artificial intelligence.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
-                <button className="bg-gradient-brand text-white px-8 py-4 rounded-xl font-medium shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-300">
+                <button className="text-white px-8 py-4 rounded-xl font-medium shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-300 bg-[#004ac6]">
                   Get Started
                 </button>
                 <button className="px-8 py-4 rounded-xl font-medium border border-[#c3c6d7] text-[#191b23] hover:bg-[#f3f3fe] transition-colors duration-300 flex items-center justify-center gap-2">
@@ -261,9 +179,9 @@ void main() {
               </div>
             </div>
 
-            <div className="relative reveal floating lg:h-[600px] flex items-center justify-center active">
+            <div className="relative reveal floating lg:h-[600px] flex items-center justify-center active" style={{ perspective: '1000px' }}>
               {/* Dashboard Preview Graphic */}
-              <div className="glass-card w-full max-w-lg rounded-2xl p-6 relative z-10">
+              <div className="glass-card w-full max-w-lg rounded-2xl p-6 relative z-10 transition-transform duration-500 [transform:rotateY(-20deg)_rotateX(10deg)] hover:[transform:rotateY(0deg)_rotateX(0deg)_scale(1.02)]">
                 <div className="flex justify-between items-center mb-6">
                   <div>
                     <h3 className="text-xl font-bold text-[#191b23]">Good morning, Admin 👋</h3>
@@ -317,7 +235,7 @@ void main() {
               {/* Floating AI Card */}
               <div className="absolute -bottom-8 -right-4 md:-right-12 glass-card rounded-xl p-4 z-20 max-w-[280px] shadow-2xl floating" style={{ animationDelay: '-3s' }}>
                 <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-[#6a1edb] text-white flex items-center justify-center shrink-0">
+                  <div className="w-8 h-8 rounded-lg text-white flex items-center justify-center shrink-0 bg-[#004ac6]">
                     <span className="material-symbols-outlined text-sm">auto_awesome</span>
                   </div>
                   <div>
@@ -348,6 +266,70 @@ void main() {
             <h3 className="text-xl font-bold text-[#191b23]">CareConnect</h3>
             <h3 className="text-xl font-bold text-[#191b23]">Vitality Systems</h3>
             <h3 className="text-xl font-bold text-[#191b23]">NovaHealth</h3>
+          </div>
+        </div>
+      </section>
+
+      {/* Features Bento Grid */}
+      <section className="py-24 bg-[#faf8ff]">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center mb-16 reveal active">
+            <h2 className="text-3xl font-bold text-[#191b23] mb-4">Everything you need to run your clinic</h2>
+            <p className="text-lg text-[#434655] max-w-2xl mx-auto">A unified platform designed for modern healthcare providers.</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Feature 1 */}
+            <div className="bg-white rounded-2xl p-8 border border-[#c3c6d7]/30 reveal hover:shadow-lg transition-shadow duration-300 flex flex-col h-full md:col-span-2 active">
+              <div className="w-12 h-12 rounded-xl bg-[#004ac6]/10 text-[#004ac6] flex items-center justify-center mb-6">
+                <span className="material-symbols-outlined">patient_list</span>
+              </div>
+              <h3 className="text-xl font-bold text-[#191b23] mb-3">Patient Management</h3>
+              <p className="text-sm text-[#434655] mb-6 flex-1">Complete patient profiles, medical histories, and treatment plans in one accessible, secure location.</p>
+              <div className="mt-auto relative h-48 bg-[#ededf9] rounded-xl overflow-hidden border border-[#c3c6d7]/20 flex items-center justify-center">
+                <div className="text-[#434655]/50 flex flex-col items-center">
+                  <span className="material-symbols-outlined text-4xl mb-2">person</span>
+                  <span className="text-xs">Patient UI Preview</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Feature 2 */}
+            <div className="bg-white rounded-2xl p-8 border border-[#c3c6d7]/30 reveal hover:shadow-lg transition-shadow duration-300 flex flex-col h-full active">
+              <div className="w-12 h-12 rounded-xl bg-[#6a1edb]/10 text-[#6a1edb] flex items-center justify-center mb-6">
+                <span className="material-symbols-outlined">auto_awesome</span>
+              </div>
+              <h3 className="text-xl font-bold text-[#191b23] mb-3">NexAI Assistant</h3>
+              <p className="text-sm text-[#434655] mb-6 flex-1">Smart medical summaries, predictive insights, and automated documentation.</p>
+              <div className="mt-auto relative h-32 bg-[#ededf9] rounded-xl overflow-hidden border border-[#c3c6d7]/20 flex items-center justify-center">
+                <div className="text-[#434655]/50 flex flex-col items-center">
+                  <span className="material-symbols-outlined text-3xl mb-1">chat</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Feature 3 */}
+            <div className="bg-white rounded-2xl p-8 border border-[#c3c6d7]/30 reveal hover:shadow-lg transition-shadow duration-300 flex flex-col h-full active">
+              <div className="w-12 h-12 rounded-xl bg-[#00687a]/10 text-[#00687a] flex items-center justify-center mb-6">
+                <span className="material-symbols-outlined">event_available</span>
+              </div>
+              <h3 className="text-xl font-bold text-[#191b23] mb-3">Smart Scheduling</h3>
+              <p className="text-sm text-[#434655] mb-6 flex-1">Intelligent calendar management that reduces no-shows and optimizes doctor time.</p>
+            </div>
+
+            {/* Feature 4 */}
+            <div className="bg-white rounded-2xl p-8 border border-[#c3c6d7]/30 reveal hover:shadow-lg transition-shadow duration-300 flex flex-col h-full md:col-span-2 active">
+              <div className="w-12 h-12 rounded-xl bg-[#2563eb] text-white flex items-center justify-center mb-6">
+                <span className="material-symbols-outlined">analytics</span>
+              </div>
+              <h3 className="text-xl font-bold text-[#191b23] mb-3">Clinical Insights</h3>
+              <p className="text-sm text-[#434655] mb-6 flex-1">Advanced reporting on clinic performance, financial health, and patient outcomes.</p>
+              <div className="mt-auto relative h-48 bg-[#ededf9] rounded-xl overflow-hidden border border-[#c3c6d7]/20 flex items-center justify-center">
+                <div className="text-[#434655]/50 flex flex-col items-center">
+                  <span className="material-symbols-outlined text-4xl mb-2">bar_chart</span>
+                  <span className="text-xs">Dashboard UI Preview</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>

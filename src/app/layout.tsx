@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import QueryProvider from "@/providers/QueryProvider";
+import { LanguageProvider } from "@/context/LanguageContext";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -18,7 +19,9 @@ export default function RootLayout({
   return (
     <html lang="vi" className={inter.className}>
       <body className="min-h-screen bg-slate-50 text-slate-900 antialiased">
-        <QueryProvider>{children}</QueryProvider>
+        <QueryProvider>
+          <LanguageProvider>{children}</LanguageProvider>
+        </QueryProvider>
       </body>
     </html>
   );

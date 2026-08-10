@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>NexClinic - Sign In</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;family=Manrope:wght@700&amp;display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+    <script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-secondary-fixed-variant": "#004e5c",
+                      "tertiary-fixed-dim": "#4edea3",
+                      "surface-container": "#eceef0",
+                      "error": "#ba1a1a",
+                      "on-tertiary": "#ffffff",
+                      "outline": "#737686",
+                      "on-background": "#191c1e",
+                      "on-error": "#ffffff",
+                      "surface-container-highest": "#e0e3e5",
+                      "surface-container-low": "#f2f4f6",
+                      "on-tertiary-fixed": "#002113",
+                      "error-container": "#ffdad6",
+                      "surface-container-high": "#e6e8ea",
+                      "secondary": "#00687a",
+                      "inverse-on-surface": "#eff1f3",
+                      "on-tertiary-fixed-variant": "#005236",
+                      "on-tertiary-container": "#bdffdb",
+                      "surface-bright": "#f7f9fb",
+                      "surface-variant": "#e0e3e5",
+                      "primary-container": "#2563eb",
+                      "tertiary-container": "#007d55",
+                      "primary-fixed": "#dbe1ff",
+                      "on-primary": "#ffffff",
+                      "surface-dim": "#d8dadc",
+                      "secondary-fixed-dim": "#4cd7f6",
+                      "tertiary-fixed": "#6ffbbe",
+                      "inverse-primary": "#b4c5ff",
+                      "outline-variant": "#c3c6d7",
+                      "on-error-container": "#93000a",
+                      "on-primary-fixed": "#00174b",
+                      "on-surface-variant": "#434655",
+                      "secondary-fixed": "#acedff",
+                      "secondary-container": "#57dffe",
+                      "primary": "#004ac6",
+                      "inverse-surface": "#2d3133",
+                      "on-secondary-fixed": "#001f26",
+                      "on-primary-container": "#eeefff",
+                      "surface-tint": "#0053db",
+                      "on-secondary-container": "#006172",
+                      "on-surface": "#191c1e",
+                      "primary-fixed-dim": "#b4c5ff",
+                      "tertiary": "#006242",
+                      "surface-container-lowest": "#ffffff",
+                      "background": "#f7f9fb",
+                      "surface": "#f7f9fb",
+                      "on-secondary": "#ffffff",
+                      "on-primary-fixed-variant": "#003ea8"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "xl": "32px",
+                      "gutter": "24px",
+                      "sm": "8px",
+                      "xs": "4px",
+                      "lg": "24px",
+                      "sidebar-width": "260px",
+                      "base": "4px",
+                      "md": "16px"
+              },
+              "fontFamily": {
+                      "label-caps": ["Manrope"],
+                      "headline-md": ["Inter"],
+                      "body-base": ["Inter"],
+                      "stat-number": ["Manrope"],
+                      "display-lg": ["Inter"],
+                      "body-medium": ["Inter"],
+                      "title-sm": ["Inter"]
+              },
+              "fontSize": {
+                      "label-caps": ["11px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700" }],
+                      "headline-md": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                      "body-base": ["14px", { "lineHeight": "20px", "letterSpacing": "0", "fontWeight": "400" }],
+                      "stat-number": ["28px", { "lineHeight": "36px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                      "display-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                      "body-medium": ["14px", { "lineHeight": "20px", "letterSpacing": "0", "fontWeight": "500" }],
+                      "title-sm": ["18px", { "lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "600" }]
+              }
+            },
+          },
+        }
+    </script>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface h-screen w-full overflow-hidden flex font-body-base">
+<!-- Left Side: Branding & Image -->
+<div class="hidden lg:flex w-1/2 h-full bg-surface-container-lowest relative items-center justify-center border-r border-outline-variant">
+    <div class="absolute inset-0 z-0">
+        <div class="w-full h-full bg-cover bg-center opacity-80 mix-blend-multiply" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAqe1Ct7KEZo_DKi7aQm_eHAryozA9NXhs2x8UDK4DCL9FgqvqhTJr7Z6p6vHro3TL_4meOl2gkliYr8Z6q2A7YMHovdsZog7or-oSRlltAYWHe0r-rKJLnMtE-TbulsnXlTo15OJ7iToQz0COBmjGvHhcAWxgHzZtxc4lG7oDP-zxfS1Z2ixmXdlMGfPDw6zVIms3-t4jM7-DvfMMrB2WAVu2iTvwUrZGUeknkR_WmK9lp-Vg-eGt9')"></div>
+    </div>
+    <div class="z-10 flex flex-col items-start px-xl max-w-lg">
+        <div class="flex items-center gap-sm mb-lg">
+            <span class="material-symbols-outlined text-primary text-[40px]" style="font-variation-settings: 'FILL' 1;">medical_services</span>
+            <h1 class="font-display-lg text-display-lg font-bold text-primary">NexClinic</h1>
+        </div>
+        <p class="font-headline-md text-headline-md text-on-surface-variant mb-md">Advancing Clinical Management.</p>
+        <p class="font-body-base text-body-base text-on-surface-variant max-w-md">Streamline your practice with high-density data visualization, secure patient records, and intelligent appointment scheduling.</p>
+    </div>
+</div>
+<!-- Right Side: Login Form -->
+<div class="w-full lg:w-1/2 h-full flex flex-col items-center justify-center bg-surface-container-lowest px-gutter relative">
+    <!-- Mobile Logo -->
+    <div class="flex lg:hidden items-center gap-sm mb-xl absolute top-lg left-lg">
+        <span class="material-symbols-outlined text-primary text-[32px]" style="font-variation-settings: 'FILL' 1;">medical_services</span>
+        <span class="font-display-lg text-display-lg font-bold text-primary text-[24px]">NexClinic</span>
+    </div>
+    <div class="w-full max-w-[400px] bg-surface-container-lowest border border-outline-variant rounded-xl p-xl shadow-[0_4px_6px_-1px_rgb(0,0,0,0.1),0_2px_4px_-2px_rgb(0,0,0,0.1)]">
+        <div class="mb-lg">
+            <h2 class="font-headline-md text-headline-md text-on-surface mb-xs">Sign In</h2>
+            <p class="font-body-base text-body-base text-on-surface-variant">Enter your credentials to access the portal.</p>
+        </div>
+        <form action="#" class="space-y-md" method="POST" onsubmit="event.preventDefault(); alert('Signed in successfully!');">
+            <!-- Email Field -->
+            <div>
+                <label class="block font-body-medium text-body-medium text-on-surface mb-base" for="email">Email address</label>
+                <div class="relative">
+                    <input class="block w-full h-[38px] px-sm rounded border border-outline-variant bg-surface-container-lowest text-on-surface focus:border-transparent focus:ring-2 focus:ring-primary focus:outline-none transition-shadow font-body-base text-body-base placeholder:text-outline" id="email" name="email" placeholder="doctor@nexclinic.com" required="" type="email">
+                    <div class="absolute inset-y-0 right-0 pr-sm flex items-center pointer-events-none">
+                        <span class="material-symbols-outlined text-outline text-[20px]">mail</span>
+                    </div>
+                </div>
+            </div>
+            <!-- Password Field -->
+            <div>
+                <div class="flex justify-between items-center mb-base">
+                    <label class="block font-body-medium text-body-medium text-on-surface" for="password">Password</label>
+                    <a class="font-body-medium text-[13px] text-primary hover:text-primary-fixed-variant transition-colors" href="#">Forgot password?</a>
+                </div>
+                <div class="relative">
+                    <input class="block w-full h-[38px] px-sm rounded border border-outline-variant bg-surface-container-lowest text-on-surface focus:border-transparent focus:ring-2 focus:ring-primary focus:outline-none transition-shadow font-body-base text-body-base placeholder:text-outline" id="password" name="password" placeholder="••••••••" required="" type="password">
+                    <button class="absolute inset-y-0 right-0 pr-sm flex items-center text-outline hover:text-on-surface transition-colors focus:outline-none" onclick="togglePassword()" type="button">
+                        <span class="material-symbols-outlined text-[20px]" id="visibility-icon">visibility_off</span>
+                    </button>
+                </div>
+            </div>
+            <!-- Remember Me -->
+            <div class="flex items-center">
+                <input class="h-4 w-4 rounded border-outline-variant text-primary focus:ring-primary bg-surface-container-lowest" id="remember-me" name="remember-me" type="checkbox">
+                <label class="ml-sm block font-body-base text-body-base text-on-surface-variant" for="remember-me">
+                    Remember me for 30 days
+                </label>
+            </div>
+            <!-- Submit Button -->
+            <button class="w-full h-[40px] flex justify-center items-center rounded-lg bg-primary text-on-primary font-body-medium text-body-medium hover:bg-on-primary-fixed-variant focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors shadow-sm" type="submit">
+                Sign In
+            </button>
+        </form>
+        <div class="mt-lg pt-lg border-t border-outline-variant text-center">
+            <p class="font-body-base text-body-base text-on-surface-variant">
+                Need technical support? <a class="text-primary font-body-medium hover:underline" href="#">Contact IT Helpdesk</a>
+            </p>
+        </div>
+    </div>
+    <!-- Footer -->
+    <div class="absolute bottom-lg text-center w-full max-w-[400px]">
+        <p class="font-label-caps text-label-caps text-outline uppercase">© 2024 NexClinic Systems. Secure Environment.</p>
+    </div>
+</div>
+<script>
+    function togglePassword() {
+        const passwordInput = document.getElementById('password');
+        const visibilityIcon = document.getElementById('visibility-icon');
+        
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            visibilityIcon.textContent = 'visibility';
+        } else {
+            passwordInput.type = 'password';
+            visibilityIcon.textContent = 'visibility_off';
+        }
+    }
+</script>
+</body>
+</html>
