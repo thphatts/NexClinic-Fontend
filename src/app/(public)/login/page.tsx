@@ -6,6 +6,7 @@ import { useAuthStore } from '@/store/useAuthStore';
 import { Loader2, Lock, Mail, ShieldCheck } from 'lucide-react';
 
 export default function LoginPage() {
+  // Production Login Page - Quick presets removed
   const [showPassword, setShowPassword] = useState(false);
   const [usernameOrEmail, setUsernameOrEmail] = useState('');
   const [password, setPassword] = useState('');
