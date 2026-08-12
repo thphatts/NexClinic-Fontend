@@ -1,15 +1,14 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { authService } from '@/services/authService';
-import { useAuthStore } from '@/store/useAuthStore';
-import { Loader2, Lock, Mail, ShieldCheck } from 'lucide-react';
+import React, { useState } from "react";
+import { authService } from "@/services/authService";
+import { useAuthStore } from "@/store/useAuthStore";
+import { Loader2, Lock, Mail, ShieldCheck } from "lucide-react";
 
 export default function LoginPage() {
-  // Production Login Page - Quick presets removed
   const [showPassword, setShowPassword] = useState(false);
-  const [usernameOrEmail, setUsernameOrEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [usernameOrEmail, setUsernameOrEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -25,10 +24,17 @@ export default function LoginPage() {
         password,
       });
       setAuth(authRes);
-      window.location.href = '/dashboard';
+      window.location.href = "/dashboard";
     } catch (err: unknown) {
-      const errorObj = err as { response?: { data?: { message?: string } }; message?: string };
-      setError(errorObj.response?.data?.message || errorObj.message || 'Invalid username or password');
+      const errorObj = err as {
+        response?: { data?: { message?: string } };
+        message?: string;
+      };
+      setError(
+        errorObj.response?.data?.message ||
+          errorObj.message ||
+          "Invalid username or password",
+      );
     } finally {
       setLoading(false);
     }
@@ -42,8 +48,12 @@ export default function LoginPage() {
           <div className="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-br from-blue-600 to-purple-600 text-white flex items-center justify-center font-extrabold text-2xl shadow-lg shadow-blue-500/20">
             ✦
           </div>
-          <h1 className="text-2xl font-extrabold text-white tracking-tight">NexClinic Portal</h1>
-          <p className="text-xs text-slate-400">Sign in to access your authorized clinic environment</p>
+          <h1 className="text-2xl font-extrabold text-white tracking-tight">
+            NexClinic Portal
+          </h1>
+          <p className="text-xs text-slate-400">
+            Sign in to access your authorized clinic environment
+          </p>
         </div>
 
         {error && (
@@ -54,7 +64,9 @@ export default function LoginPage() {
 
         <form onSubmit={handleLogin} className="space-y-4 text-xs">
           <div>
-            <label className="block text-slate-300 font-semibold mb-1">Username or Email</label>
+            <label className="block text-slate-300 font-semibold mb-1">
+              Username or Email
+            </label>
             <div className="relative">
               <input
                 required
@@ -69,11 +81,13 @@ export default function LoginPage() {
           </div>
 
           <div>
-            <label className="block text-slate-300 font-semibold mb-1">Password</label>
+            <label className="block text-slate-300 font-semibold mb-1">
+              Password
+            </label>
             <div className="relative">
               <input
                 required
-                type={showPassword ? 'text' : 'password'}
+                type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
@@ -85,7 +99,7 @@ export default function LoginPage() {
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400 hover:text-white"
               >
-                {showPassword ? 'HIDE' : 'SHOW'}
+                {showPassword ? "HIDE" : "SHOW"}
               </button>
             </div>
           </div>
