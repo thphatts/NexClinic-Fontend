@@ -2,12 +2,14 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Sparkles, X, Send, Bot, User, RefreshCw } from 'lucide-react';
+import { aiService } from '@/services/aiService';
 import { AiChatMessage } from '@/types/api';
 
 export const NexAiFloatingWidget: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [sessionId, setSessionId] = useState<string | undefined>(undefined);
   const [messages, setMessages] = useState<AiChatMessage[]>([
     {
       id: '1',
@@ -29,13 +31,14 @@ export const NexAiFloatingWidget: React.FC = () => {
     }
   }, [messages, isOpen]);
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!input.trim() || isTyping) return;
 
+    const userText = input;
     const userMsg: AiChatMessage = {
       id: Date.now().toString(),
       sender: 'user',
-      text: input,
+      text: userText,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     };
 
@@ -43,29 +46,28 @@ export const NexAiFloatingWidget: React.FC = () => {
     setInput('');
     setIsTyping(true);
 
-    // AI Response Simulation with progressive streaming feel
-    setTimeout(() => {
-      let responseText = 'Summarized patient record context. All parameters are within normal physiological bounds.';
-      
-      const lower = userMsg.text.toLowerCase();
-      if (lower.includes('cough') || lower.includes('fever') || lower.includes('symptom')) {
-        responseText = 'Based on the symptoms described (cough/fever), differential diagnoses include Acute Bronchitis or Upper Respiratory Tract Infection. Recommended next step: Complete Blood Count (CBC) & Chest X-Ray.';
-      } else if (lower.includes('schedule') || lower.includes('doctor')) {
-        responseText = 'Dr. Nguyen Minh Tuan has 4 available slots remaining today: 14:00, 15:00, 15:30, and 16:30. Would you like me to reserve a slot?';
-      } else if (lower.includes('patient')) {
-        responseText = 'Found 1,248 active patient profiles. 3 patients require critical follow-ups today based on yesterday\'s lab results.';
-      }
+    try {
+      const res = await aiService.chat(userText, sessionId);
+      if (res.sessionId) setSessionId(res.sessionId);
 
       const aiMsg: AiChatMessage = {
         id: (Date.now() + 1).toString(),
         sender: 'ai',
-        text: responseText,
+        text: res.response || 'I have processed your query.',
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       };
-
       setMessages((prev) => [...prev, aiMsg]);
+    } catch {
+      const aiMsg: AiChatMessage = {
+        id: (Date.now() + 1).toString(),
+        sender: 'ai',
+        text: 'I am here to assist with medical records, appointments, and symptom analysis. Please specify your request.',
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      };
+      setMessages((prev) => [...prev, aiMsg]);
+    } finally {
       setIsTyping(false);
-    }, 1200);
+    }
   };
 
   return (
@@ -146,7 +148,7 @@ export const NexAiFloatingWidget: React.FC = () => {
             {isTyping && (
               <div className="flex items-center gap-2 text-xs text-purple-600 font-semibold p-2">
                 <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                <span>NexAI is formulating medical summary...</span>
+                <span>NexAI is formulating response...</span>
               </div>
             )}
             <div ref={messagesEndRef} />

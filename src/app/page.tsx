@@ -255,9 +255,9 @@ export default function Home() {
                   </div>
                   <div className="p-4 space-y-3">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-xl bg-[#2563eb] text-white flex items-center justify-center text-xs font-bold">NA</div>
+                      <div className="w-8 h-8 rounded-xl bg-[#2563eb] text-white flex items-center justify-center text-xs font-bold">PA</div>
                       <div className="flex-1">
-                        <p className="text-xs font-bold text-[#191b23]">Nguyen Van An</p>
+                        <p className="text-xs font-bold text-[#191b23]">Patient Sample A</p>
                         <p className="text-[10px] text-[#434655]">Cardiology Checkup</p>
                       </div>
                       <div className="text-right">
@@ -266,9 +266,9 @@ export default function Home() {
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-xl bg-[#8343f4] text-white flex items-center justify-center text-xs font-bold">TB</div>
+                      <div className="w-8 h-8 rounded-xl bg-[#8343f4] text-white flex items-center justify-center text-xs font-bold">PB</div>
                       <div className="flex-1">
-                        <p className="text-xs font-bold text-[#191b23]">Tran Thi Binh</p>
+                        <p className="text-xs font-bold text-[#191b23]">Patient Sample B</p>
                         <p className="text-[10px] text-[#434655]">Dermatology</p>
                       </div>
                       <div className="text-right">
@@ -411,7 +411,7 @@ export default function Home() {
               {demoPrompt === 'emr' && (
                 <div className="space-y-3 text-xs text-slate-800 animate-in fade-in duration-300">
                   <div className="p-3.5 bg-purple-50/60 rounded-2xl border border-purple-100">
-                    <p className="font-bold text-purple-900">Patient EMR Summary (#MR-101):</p>
+                    <p className="font-bold text-purple-900">Patient EMR Summary:</p>
                     <p className="mt-1">
                       Patient has history of mild hypertension. Recent checkup notes resolution of acute symptoms after 7-day antibiotic course.
                     </p>
@@ -423,7 +423,7 @@ export default function Home() {
                 <div className="space-y-3 text-xs text-slate-800 animate-in fade-in duration-300">
                   <div className="p-3.5 bg-purple-50/60 rounded-2xl border border-purple-100">
                     <p className="font-bold text-purple-900">Schedule Intelligence:</p>
-                    <p className="mt-1">Dr. Nguyen Minh Tuan has 4 open slots remaining today: 14:00, 15:00, 15:30, 16:30.</p>
+                    <p className="mt-1">Duty physician has open slots remaining today: 14:00, 15:00, 15:30, 16:30.</p>
                   </div>
                 </div>
               )}

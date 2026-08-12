@@ -5,28 +5,41 @@ export interface ApiResponse<T> {
 }
 
 export interface PagedResponse<T> {
-  content: T[];
+  items: T[];
+  content?: T[]; // alias for compatibility
   pageNo: number;
   pageSize: number;
   totalElements: number;
   totalPages: number;
-  last: boolean;
+  isLast: boolean;
 }
 
 export type Role = 'ROLE_ADMIN' | 'ROLE_DOCTOR' | 'ROLE_STAFF' | 'ROLE_PATIENT';
 export type Gender = 'MALE' | 'FEMALE' | 'OTHER';
 export type AppointmentStatus = 'PENDING' | 'CONFIRMED' | 'COMPLETED' | 'CANCELLED';
 export type PaymentStatus = 'PENDING' | 'SUCCESS' | 'FAILED' | 'REFUNDED';
+export type PaymentMethod = 'CASH' | 'VNPAY' | 'BANK_TRANSFER';
 
 export interface User {
   id: string;
-  name: string;
+  name?: string;
   username: string;
   email: string;
   phoneNumber?: string;
+  phone?: string;
   address?: string;
   citizenId?: string;
   role: Role;
+}
+
+export interface AuthResponse {
+  token: string;
+  tokenType: string;
+  userId: string;
+  username: string;
+  email: string;
+  role: Role;
+  expiresInMs: number;
 }
 
 export interface Patient {
@@ -61,10 +74,32 @@ export interface DoctorSchedule {
   id: number;
   doctorId: number;
   dayOfWeek: number; // 1 = Monday, 7 = Sunday
-  startTime: string; // e.g. "08:00"
-  endTime: string;   // e.g. "17:00"
+  startTime: string; // e.g. "08:00:00"
+  endTime: string;   // e.g. "17:00:00"
   slotDurationMinutes: number; // e.g. 30
   active: boolean;
+}
+
+export interface AvailableSlot {
+  date: string;
+  startTime: string;
+  endTime: string;
+  timeSlotLabel: string;
+}
+
+export interface DoctorReview {
+  id: number;
+  doctorId: number;
+  patientId: number;
+  patientName: string;
+  doctorName?: string;
+  verified: boolean;
+  appointmentId: number;
+  rating: number;
+  comment: string;
+  visitCountSnapshot?: number;
+  createdAt: string;
+  updatedAt?: string;
 }
 
 export interface Appointment {
@@ -136,16 +171,17 @@ export interface Category {
 }
 
 export interface Payment {
-  id: string; // UUID string
+  paymentId?: string;
+  id?: string;
   appointmentId: number;
   patientName?: string;
   amount: number;
-  paymentStatus: PaymentStatus;
-  paymentMethod: string;
-  gatewayTransactionId?: string;
+  status?: PaymentStatus;
+  paymentStatus?: PaymentStatus;
+  paymentMethod?: string;
   orderRef?: string;
+  paymentUrl?: string;
   createdAt?: string;
-  paidAt?: string;
 }
 
 export interface AiChatMessage {
@@ -162,3 +198,11 @@ export interface AiSymptomAnalysisResult {
   warningSigns: string[];
   suggestedAction: string;
 }
+
+export interface AiAgentActionResult {
+  actionName: string;
+  status: string;
+  resultMessage: string;
+  payloadData?: Record<string, unknown>;
+}
+

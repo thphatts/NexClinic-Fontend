@@ -1,173 +1,112 @@
 'use client';
 
 import React, { useState } from 'react';
-import Link from 'next/link';
+import { authService } from '@/services/authService';
+import { useAuthStore } from '@/store/useAuthStore';
+import { Loader2, Lock, Mail, ShieldCheck } from 'lucide-react';
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
-  const [email, setEmail] = useState('');
+  const [usernameOrEmail, setUsernameOrEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const { setAuth } = useAuthStore();
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    alert(`Signed in as: ${email}`);
+    setLoading(true);
+    setError(null);
+    try {
+      const authRes = await authService.login({
+        username: usernameOrEmail.trim(),
+        password,
+      });
+      setAuth(authRes);
+      window.location.href = '/dashboard';
+    } catch (err: unknown) {
+      const errorObj = err as { response?: { data?: { message?: string } }; message?: string };
+      setError(errorObj.response?.data?.message || errorObj.message || 'Invalid username or password');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="bg-[#f7f9fb] text-[#191c1e] h-screen w-full overflow-hidden flex font-sans antialiased">
-      {/* Material Symbols Outlined Font */}
-      <link
-        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
-        rel="stylesheet"
-      />
-
-      <style jsx global>{`
-        .material-symbols-outlined {
-          font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-        }
-      `}</style>
-
-      {/* Left Side: Branding & Image */}
-      <div className="hidden lg:flex w-1/2 h-full bg-white relative items-center justify-center border-r border-[#c3c6d7]">
-        <div className="absolute inset-0 z-0">
-          <div
-            className="w-full h-full bg-cover bg-center opacity-80 mix-blend-multiply"
-            style={{
-              backgroundImage:
-                "url('https://lh3.googleusercontent.com/aida-public/AB6AXuAqe1Ct7KEZo_DKi7aQm_eHAryozA9NXhs2x8UDK4DCL9FgqvqhTJr7Z6p6vHro3TL_4meOl2gkliYr8Z6q2A7YMHovdsZog7or-oSRlltAYWHe0r-rKJLnMtE-TbulsnXlTo15OJ7iToQz0COBmjGvHhcAWxgHzZtxc4lG7oDP-zxfS1Z2ixmXdlMGfPDw6zVIms3-t4jM7-DvfMMrB2WAVu2iTvwUrZGUeknkR_WmK9lp-Vg-eGt9')",
-            }}
-          ></div>
-        </div>
-        <div className="z-10 flex flex-col items-start px-8 max-w-lg">
-          <div className="flex items-center gap-2 mb-6">
-            <span
-              className="material-symbols-outlined text-[#004ac6] text-[40px]"
-              style={{ fontVariationSettings: "'FILL' 1" }}
-            >
-              medical_services
-            </span>
-            <h1 className="text-3xl font-bold text-[#004ac6]">NexClinic</h1>
+    <div className="bg-slate-900 text-slate-100 min-h-screen w-full flex items-center justify-center font-sans antialiased p-4">
+      <div className="w-full max-w-md bg-slate-800/90 border border-slate-700/80 rounded-3xl p-8 shadow-2xl backdrop-blur-md space-y-6">
+        {/* Brand Header */}
+        <div className="text-center space-y-2">
+          <div className="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-br from-blue-600 to-purple-600 text-white flex items-center justify-center font-extrabold text-2xl shadow-lg shadow-blue-500/20">
+            ✦
           </div>
-          <p className="text-2xl font-semibold text-[#434655] mb-4">Advancing Clinical Management.</p>
-          <p className="text-sm text-[#434655] max-w-md leading-relaxed">
-            Streamline your practice with high-density data visualization, secure patient records, and intelligent appointment scheduling.
-          </p>
-        </div>
-      </div>
-
-      {/* Right Side: Login Form */}
-      <div className="w-full lg:w-1/2 h-full flex flex-col items-center justify-center bg-white px-6 relative">
-        {/* Mobile Logo */}
-        <div className="flex lg:hidden items-center gap-2 mb-8 absolute top-6 left-6">
-          <span
-            className="material-symbols-outlined text-[#004ac6] text-[32px]"
-            style={{ fontVariationSettings: "'FILL' 1" }}
-          >
-            medical_services
-          </span>
-          <span className="text-2xl font-bold text-[#004ac6]">NexClinic</span>
+          <h1 className="text-2xl font-extrabold text-white tracking-tight">NexClinic Portal</h1>
+          <p className="text-xs text-slate-400">Sign in to access your authorized clinic environment</p>
         </div>
 
-        <div className="w-full max-w-[400px] bg-white border border-[#c3c6d7] rounded-xl p-8 shadow-[0_4px_6px_-1px_rgb(0,0,0,0.1),0_2px_4px_-2px_rgb(0,0,0,0.1)]">
-          <div className="mb-6">
-            <h2 className="text-2xl font-semibold text-[#191c1e] mb-1">Sign In</h2>
-            <p className="text-sm text-[#434655]">Enter your credentials to access the portal.</p>
+        {error && (
+          <div className="p-3.5 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-semibold text-center">
+            {error}
           </div>
+        )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Email Field */}
-            <div>
-              <label className="block text-sm font-medium text-[#191c1e] mb-1" htmlFor="email">
-                Email address
-              </label>
-              <div className="relative">
-                <input
-                  className="block w-full h-[38px] px-3 rounded border border-[#c3c6d7] bg-white text-[#191c1e] focus:border-transparent focus:ring-2 focus:ring-[#004ac6] focus:outline-none transition-shadow text-sm placeholder:text-[#737686]"
-                  id="email"
-                  name="email"
-                  placeholder="doctor@nexclinic.com"
-                  required
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
-                <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                  <span className="material-symbols-outlined text-[#737686] text-[20px]">mail</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Password Field */}
-            <div>
-              <div className="flex justify-between items-center mb-1">
-                <label className="block text-sm font-medium text-[#191c1e]" htmlFor="password">
-                  Password
-                </label>
-                <a className="text-[13px] text-[#004ac6] hover:text-[#003ea8] transition-colors" href="#">
-                  Forgot password?
-                </a>
-              </div>
-              <div className="relative">
-                <input
-                  className="block w-full h-[38px] px-3 rounded border border-[#c3c6d7] bg-white text-[#191c1e] focus:border-transparent focus:ring-2 focus:ring-[#004ac6] focus:outline-none transition-shadow text-sm placeholder:text-[#737686]"
-                  id="password"
-                  name="password"
-                  placeholder="••••••••"
-                  required
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-                <button
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-[#737686] hover:text-[#191c1e] transition-colors focus:outline-none"
-                  onClick={() => setShowPassword(!showPassword)}
-                  type="button"
-                >
-                  <span className="material-symbols-outlined text-[20px]">
-                    {showPassword ? 'visibility' : 'visibility_off'}
-                  </span>
-                </button>
-              </div>
-            </div>
-
-            {/* Remember Me */}
-            <div className="flex items-center">
+        <form onSubmit={handleLogin} className="space-y-4 text-xs">
+          <div>
+            <label className="block text-slate-300 font-semibold mb-1">Username or Email</label>
+            <div className="relative">
               <input
-                className="h-4 w-4 rounded border-[#c3c6d7] text-[#004ac6] focus:ring-[#004ac6] bg-white"
-                id="remember-me"
-                name="remember-me"
-                type="checkbox"
+                required
+                type="text"
+                value={usernameOrEmail}
+                onChange={(e) => setUsernameOrEmail(e.target.value)}
+                placeholder="Enter your username or email"
+                className="w-full px-4 py-3 pl-10 rounded-xl bg-slate-900/80 border border-slate-700 text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none transition"
               />
-              <label className="ml-2 block text-sm text-[#434655]" htmlFor="remember-me">
-                Remember me for 30 days
-              </label>
+              <Mail className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
             </div>
-
-            {/* Submit Button */}
-            <button
-              className="w-full h-[40px] flex justify-center items-center rounded-lg bg-[#004ac6] text-white font-medium text-sm hover:bg-[#003ea8] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#004ac6] transition-colors shadow-sm"
-              type="submit"
-            >
-              Sign In
-            </button>
-          </form>
-
-          <div className="mt-6 pt-6 border-t border-[#c3c6d7] text-center">
-            <p className="text-sm text-[#434655]">
-              Need technical support?{' '}
-              <a className="text-[#004ac6] font-medium hover:underline" href="#">
-                Contact IT Helpdesk
-              </a>
-            </p>
           </div>
-        </div>
 
-        {/* Footer */}
-        <div className="absolute bottom-6 text-center w-full max-w-[400px]">
-          <p className="text-[11px] text-[#737686] uppercase tracking-wider font-bold">
-            © 2024 NexClinic Systems. Secure Environment.
-          </p>
-        </div>
+          <div>
+            <label className="block text-slate-300 font-semibold mb-1">Password</label>
+            <div className="relative">
+              <input
+                required
+                type={showPassword ? 'text' : 'password'}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                className="w-full px-4 py-3 pl-10 rounded-xl bg-slate-900/80 border border-slate-700 text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none transition"
+              />
+              <Lock className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400 hover:text-white"
+              >
+                {showPassword ? 'HIDE' : 'SHOW'}
+              </button>
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full py-3 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-500 disabled:opacity-50 transition shadow-md shadow-blue-600/20 flex items-center justify-center gap-2 text-xs"
+          >
+            {loading ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>Authenticating...</span>
+              </>
+            ) : (
+              <>
+                <ShieldCheck className="w-4 h-4" />
+                <span>Sign In</span>
+              </>
+            )}
+          </button>
+        </form>
       </div>
     </div>
   );

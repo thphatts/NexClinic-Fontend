@@ -1,8 +1,10 @@
 'use client';
 
 import React from 'react';
-import { Search, Bell, Calendar as CalendarIcon, User, Globe } from 'lucide-react';
+import { Search, Bell, Calendar as CalendarIcon, User, Globe, LogOut } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
+import { useAuthStore } from '@/store/useAuthStore';
+import { authService } from '@/services/authService';
 
 interface HeaderProps {
   title?: string;
@@ -11,6 +13,18 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({ title }) => {
   const { language, setLanguage, t } = useLanguage();
+  const { user, logout } = useAuthStore();
+
+  const handleLogout = async () => {
+    try {
+      await authService.logout();
+    } catch {
+      // ignore
+    } finally {
+      logout();
+      window.location.href = '/login';
+    }
+  };
 
   const currentDate = new Date().toLocaleDateString(language === 'vi' ? 'vi-VN' : 'en-US', {
     weekday: 'long',
@@ -18,6 +32,8 @@ export const Header: React.FC<HeaderProps> = ({ title }) => {
     month: 'short',
     day: 'numeric',
   });
+
+  const displayRole = user?.role ? user.role.replace('ROLE_', '') : 'GUEST';
 
   return (
     <header className="h-16 bg-white/80 backdrop-blur-md border-b border-slate-200/80 sticky top-0 z-30 px-6 flex items-center justify-between">
@@ -66,14 +82,27 @@ export const Header: React.FC<HeaderProps> = ({ title }) => {
         {/* User Profile Menu */}
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-600 to-purple-600 text-white flex items-center justify-center font-bold text-xs shadow-sm">
-            <User className="w-4 h-4" />
+            {user?.name?.charAt(0) || user?.username?.charAt(0)?.toUpperCase() || <User className="w-4 h-4" />}
           </div>
           <div className="hidden md:flex flex-col">
-            <span className="text-xs font-bold text-slate-900 leading-tight">Dr. Admin</span>
-            <span className="text-[10px] font-semibold text-blue-600">Chief Physician</span>
+            <span className="text-xs font-bold text-slate-900 leading-tight">
+              {user?.name || user?.username || 'User'}
+            </span>
+            <span className="text-[10px] font-semibold text-purple-600 uppercase tracking-wide">
+              {displayRole}
+            </span>
           </div>
+
+          <button
+            onClick={handleLogout}
+            className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition"
+            title={t('logout')}
+          >
+            <LogOut className="w-4 h-4" />
+          </button>
         </div>
       </div>
     </header>
   );
 };
+
