@@ -25,6 +25,19 @@ export const apiClient = axios.create({
   },
 });
 
+export function getResponseData<T>(res: { data: any }): T {
+  if (!res || res.data === undefined || res.data === null) {
+    return res as unknown as T;
+  }
+  if (res.data.result !== undefined) {
+    return res.data.result as T;
+  }
+  if (res.data.data !== undefined) {
+    return res.data.data as T;
+  }
+  return res.data as T;
+}
+
 apiClient.interceptors.request.use(
   (config) => {
     if (typeof window !== 'undefined') {

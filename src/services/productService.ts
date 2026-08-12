@@ -1,4 +1,4 @@
-import apiClient from '@/lib/axios';
+import apiClient, { getResponseData } from '@/lib/axios';
 import { ApiResponse, PagedResponse, Product } from '@/types/api';
 
 export interface ProductQueryParams {
@@ -22,6 +22,6 @@ export const productService = {
         category: params?.category || undefined,
       },
     });
-    return res.data.data;
+    return getResponseData<PagedResponse<Product>>(res);
   },
 };

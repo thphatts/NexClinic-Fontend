@@ -31,31 +31,31 @@ export const patientService = {
         search: params?.search || undefined,
       },
     });
-    return res.data.data;
+    return (res.data.result ?? res.data.data)!;
   },
 
   async getPatientById(id: number): Promise<Patient> {
     const res = await apiClient.get<ApiResponse<Patient>>(`/patients/${id}`);
-    return res.data.data;
+    return (res.data.result ?? res.data.data)!;
   },
 
   async getPatientByCitizenId(citizenId: string): Promise<Patient> {
     const res = await apiClient.get<ApiResponse<Patient>>(`/patients/citizen-id/${citizenId}`);
-    return res.data.data;
+    return (res.data.result ?? res.data.data)!;
   },
 
   async createPatient(data: PatientCreateParams): Promise<Patient> {
     const res = await apiClient.post<ApiResponse<Patient>>('/patients', data);
-    return res.data.data;
+    return (res.data.result ?? res.data.data)!;
   },
 
   async updatePatient(id: number, data: PatientCreateParams): Promise<Patient> {
     const res = await apiClient.put<ApiResponse<Patient>>(`/patients/${id}`, data);
-    return res.data.data;
+    return (res.data.result ?? res.data.data)!;
   },
 
   async deletePatient(id: number): Promise<string> {
     const res = await apiClient.delete<ApiResponse<string>>(`/patients/${id}`);
-    return res.data.data;
+    return (res.data.result ?? res.data.data ?? res.data.message)!;
   },
 };

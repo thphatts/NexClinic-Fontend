@@ -1,4 +1,4 @@
-import apiClient from '@/lib/axios';
+import apiClient, { getResponseData } from '@/lib/axios';
 import { ApiResponse, PagedResponse, MedicalRecord } from '@/types/api';
 
 export interface MedicalRecordQueryParams {
@@ -28,31 +28,31 @@ export const medicalRecordService = {
         sort_dir: params?.sortDir || 'desc',
       },
     });
-    return res.data.data;
+    return getResponseData<PagedResponse<MedicalRecord>>(res);
   },
 
   async getMedicalRecordById(id: number): Promise<MedicalRecord> {
     const res = await apiClient.get<ApiResponse<MedicalRecord>>(`/medical-records/${id}`);
-    return res.data.data;
+    return getResponseData<MedicalRecord>(res);
   },
 
   async getMedicalRecordByAppointmentId(appointmentId: number): Promise<MedicalRecord> {
     const res = await apiClient.get<ApiResponse<MedicalRecord>>(`/medical-records/appointment/${appointmentId}`);
-    return res.data.data;
+    return getResponseData<MedicalRecord>(res);
   },
 
   async getMedicalRecordsByPatientId(patientId: number): Promise<MedicalRecord[]> {
     const res = await apiClient.get<ApiResponse<MedicalRecord[]>>(`/medical-records/patient/${patientId}`);
-    return res.data.data;
+    return getResponseData<MedicalRecord[]>(res);
   },
 
   async getMedicalRecordsByDoctorId(doctorId: number): Promise<MedicalRecord[]> {
     const res = await apiClient.get<ApiResponse<MedicalRecord[]>>(`/medical-records/doctor/${doctorId}`);
-    return res.data.data;
+    return getResponseData<MedicalRecord[]>(res);
   },
 
   async createMedicalRecord(data: MedicalRecordCreateParams): Promise<MedicalRecord> {
     const res = await apiClient.post<ApiResponse<MedicalRecord>>('/medical-records', data);
-    return res.data.data;
+    return getResponseData<MedicalRecord>(res);
   },
 };

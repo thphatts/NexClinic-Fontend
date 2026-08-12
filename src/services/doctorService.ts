@@ -1,4 +1,4 @@
-import apiClient from '@/lib/axios';
+import apiClient, { getResponseData } from '@/lib/axios';
 import {
   ApiResponse,
   PagedResponse,
@@ -36,6 +36,7 @@ export interface DoctorScheduleCreateParams {
 
 export interface DoctorReviewCreateParams {
   doctorId: number;
+  patientId: number;
   appointmentId: number;
   rating: number;
   comment: string;
@@ -53,62 +54,62 @@ export const doctorService = {
         search: params?.search || undefined,
       },
     });
-    return res.data.data;
+    return getResponseData<PagedResponse<Doctor>>(res);
   },
 
   async getDoctorById(id: number): Promise<Doctor> {
     const res = await apiClient.get<ApiResponse<Doctor>>(`/doctors/${id}`);
-    return res.data.data;
+    return getResponseData<Doctor>(res);
   },
 
   async getDoctorsBySpecialization(specialization: string): Promise<Doctor[]> {
     const res = await apiClient.get<ApiResponse<Doctor[]>>(`/doctors/specialization/${specialization}`);
-    return res.data.data;
+    return getResponseData<Doctor[]>(res);
   },
 
   async createDoctor(data: DoctorCreateParams): Promise<Doctor> {
     const res = await apiClient.post<ApiResponse<Doctor>>('/doctors', data);
-    return res.data.data;
+    return getResponseData<Doctor>(res);
   },
 
   async updateDoctor(id: number, data: DoctorCreateParams): Promise<Doctor> {
     const res = await apiClient.put<ApiResponse<Doctor>>(`/doctors/${id}`, data);
-    return res.data.data;
+    return getResponseData<Doctor>(res);
   },
 
   async deleteDoctor(id: number): Promise<string> {
     const res = await apiClient.delete<ApiResponse<string>>(`/doctors/${id}`);
-    return res.data.data;
+    return getResponseData<string>(res);
   },
 
   // Schedules & Available Slots
   async getSchedules(doctorId: number): Promise<DoctorSchedule[]> {
     const res = await apiClient.get<ApiResponse<DoctorSchedule[]>>(`/doctors/${doctorId}/schedules`);
-    return res.data.data;
+    return getResponseData<DoctorSchedule[]>(res);
   },
 
   async createSchedule(doctorId: number, data: DoctorScheduleCreateParams): Promise<DoctorSchedule> {
     const res = await apiClient.post<ApiResponse<DoctorSchedule>>(`/doctors/${doctorId}/schedules`, data);
-    return res.data.data;
+    return getResponseData<DoctorSchedule>(res);
   },
 
   async deleteSchedule(doctorId: number, scheduleId: number): Promise<string> {
     const res = await apiClient.delete<ApiResponse<string>>(`/doctors/${doctorId}/schedules/${scheduleId}`);
-    return res.data.data;
+    return getResponseData<string>(res);
   },
 
   async getAvailableSlots(doctorId: number, date: string): Promise<AvailableSlot[]> {
     const res = await apiClient.get<ApiResponse<AvailableSlot[]>>(`/doctors/${doctorId}/schedules/available-slots`, {
       params: { date },
     });
-    return res.data.data;
+    return getResponseData<AvailableSlot[]>(res);
   },
 
   async addLeave(doctorId: number, date: string, reason?: string): Promise<string> {
     const res = await apiClient.post<ApiResponse<string>>(`/doctors/${doctorId}/schedules/leaves`, null, {
       params: { date, reason },
     });
-    return res.data.data;
+    return getResponseData<string>(res);
   },
 
   // Doctor Reviews
@@ -116,21 +117,21 @@ export const doctorService = {
     const res = await apiClient.get<ApiResponse<PagedResponse<DoctorReview>>>(`/doctor-reviews/doctor/${doctorId}`, {
       params: { page_no: page, page_size: size },
     });
-    return res.data.data;
+    return getResponseData<PagedResponse<DoctorReview>>(res);
   },
 
   async createReview(data: DoctorReviewCreateParams): Promise<DoctorReview> {
     const res = await apiClient.post<ApiResponse<DoctorReview>>('/doctor-reviews', data);
-    return res.data.data;
+    return getResponseData<DoctorReview>(res);
   },
 
   async updateReview(id: number, data: DoctorReviewCreateParams): Promise<DoctorReview> {
     const res = await apiClient.put<ApiResponse<DoctorReview>>(`/doctor-reviews/${id}`, data);
-    return res.data.data;
+    return getResponseData<DoctorReview>(res);
   },
 
   async deleteReview(id: number): Promise<string> {
     const res = await apiClient.delete<ApiResponse<string>>(`/doctor-reviews/${id}`);
-    return res.data.data;
+    return getResponseData<string>(res);
   },
 };

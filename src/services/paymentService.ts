@@ -1,4 +1,4 @@
-import apiClient from '@/lib/axios';
+import apiClient, { getResponseData } from '@/lib/axios';
 import { ApiResponse, Payment, PaymentMethod } from '@/types/api';
 
 export interface CreatePaymentParams {
@@ -9,6 +9,6 @@ export interface CreatePaymentParams {
 export const paymentService = {
   async createPayment(params: CreatePaymentParams): Promise<Payment> {
     const res = await apiClient.post<ApiResponse<Payment>>('/payments/create', params);
-    return res.data.data;
+    return getResponseData<Payment>(res);
   },
 };

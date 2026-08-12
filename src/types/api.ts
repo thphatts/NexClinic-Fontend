@@ -1,7 +1,9 @@
 export interface ApiResponse<T> {
-  status: number;
+  code?: number;
+  status?: number;
   message: string;
-  data: T;
+  result?: T;
+  data?: T;
 }
 
 export interface PagedResponse<T> {

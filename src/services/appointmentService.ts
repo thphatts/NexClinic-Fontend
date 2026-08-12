@@ -1,4 +1,4 @@
-import apiClient from '@/lib/axios';
+import apiClient, { getResponseData } from '@/lib/axios';
 import { ApiResponse, PagedResponse, Appointment, AppointmentStatus } from '@/types/api';
 
 export interface AppointmentQueryParams {
@@ -37,28 +37,28 @@ export const appointmentService = {
         sort_dir: params?.sortDir || 'asc',
       },
     });
-    return res.data.data;
+    return getResponseData<PagedResponse<Appointment>>(res);
   },
 
   async getAppointmentById(id: number): Promise<Appointment> {
     const res = await apiClient.get<ApiResponse<Appointment>>(`/appointments/${id}`);
-    return res.data.data;
+    return getResponseData<Appointment>(res);
   },
 
   async createAppointment(data: AppointmentCreateParams): Promise<Appointment> {
     const res = await apiClient.post<ApiResponse<Appointment>>('/appointments', data);
-    return res.data.data;
+    return getResponseData<Appointment>(res);
   },
 
   async updateAppointmentStatus(id: number, status: AppointmentStatus, notes?: string): Promise<Appointment> {
     const res = await apiClient.patch<ApiResponse<Appointment>>(`/appointments/${id}/status`, null, {
       params: { status, notes },
     });
-    return res.data.data;
+    return getResponseData<Appointment>(res);
   },
 
   async cancelAppointment(id: number): Promise<string> {
     const res = await apiClient.delete<ApiResponse<string>>(`/appointments/${id}`);
-    return res.data.data;
+    return getResponseData<string>(res);
   },
 };
