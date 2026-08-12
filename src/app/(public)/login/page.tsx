@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
 import { authService } from "@/services/authService";
 import { useAuthStore } from "@/store/useAuthStore";
-import { Loader2, Lock, Mail, ShieldCheck } from "lucide-react";
+import { Loader2, Lock, Mail, ShieldCheck, UserPlus } from "lucide-react";
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -122,6 +123,17 @@ export default function LoginPage() {
             )}
           </button>
         </form>
+
+        <div className="pt-4 border-t border-slate-700/60 text-center text-xs text-slate-400">
+          Chưa có tài khoản?{" "}
+          <Link
+            href="/register"
+            className="text-blue-400 font-bold hover:underline inline-flex items-center gap-1 ml-1"
+          >
+            <UserPlus className="w-3.5 h-3.5 inline" />
+            <span>Đăng ký ngay</span>
+          </Link>
+        </div>
       </div>
     </div>
   );

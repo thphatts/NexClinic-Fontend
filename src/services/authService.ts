@@ -14,6 +14,8 @@ export interface RegisterParams {
   password?: string;
   phone?: string;
   address?: string;
+  dob?: string;
+  gender?: string;
   citizenId?: string;
   role?: string;
 }
