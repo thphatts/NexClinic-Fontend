@@ -144,13 +144,37 @@ export default function AppointmentsPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    let targetPatientId = formData.patientId;
+    if (isPatient && (!targetPatientId || targetPatientId === 0)) {
+      if (myPatientProfile && myPatientProfile.id) {
+        targetPatientId = myPatientProfile.id;
+      } else {
+        try {
+          const freshProfile = await patientService.getMyPatientProfile();
+          setMyPatientProfile(freshProfile);
+          targetPatientId = freshProfile.id;
+        } catch {
+          alert('Không thể xác thực hồ sơ bệnh nhân. Vui lòng thử lại!');
+          return;
+        }
+      }
+    }
+
+    if (!targetPatientId || targetPatientId === 0) {
+      alert('Vui lòng chọn bệnh nhân');
+      return;
+    }
+
     if (!formData.timeSlot) {
-      alert('Please select an available time slot');
+      alert('Vui lòng chọn ca khám khả dụng');
       return;
     }
     setSubmitting(true);
     try {
-      await appointmentService.createAppointment(formData);
+      await appointmentService.createAppointment({
+        ...formData,
+        patientId: targetPatientId,
+      });
       setIsModalOpen(false);
       fetchAppointments();
     } catch (err: unknown) {
