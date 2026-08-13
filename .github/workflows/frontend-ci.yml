@@ -1,0 +1,36 @@
+name: NexClinic Frontend CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, dev ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  lint-typecheck-build:
+    name: Lint, TypeCheck & Build Verification
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Run TypeScript Type Check
+        run: npx tsc --noEmit
+
+      - name: Run ESLint
+        run: npm run lint
+
+      - name: Test Next.js Production Build
+        env:
+          NEXT_PUBLIC_API_BASE_URL: https://ai-powered-clinic-portal.onrender.com/api/v1
+        run: npm run build
