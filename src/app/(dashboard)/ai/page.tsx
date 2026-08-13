@@ -45,20 +45,13 @@ export default function AiSymptomAnalyzerPage() {
     } catch {
       // Fallback structured result if AI service returns default or raw text
       setAnalysisResult({
-        triageLevel: 'Specialist Referral Recommended',
-        possibleConditions: [
-          { name: 'Upper Respiratory Infection', probability: 75 },
-          { name: 'Bronchitis / Inflammation', probability: 55 },
-        ],
-        recommendations: [
-          'Schedule an in-person consultation with a physician.',
-          'Hydrate well and rest.',
-        ],
-        warningSigns: [
-          'High fever (> 38.5°C) refractory to medication.',
-          'Severe shortness of breath.',
-        ],
-        suggestedAction: 'Consult General Practitioner or Specialist.',
+        primaryDiagnosis: 'Nghi ngờ Viêm đường hô hấp trên / Cảm cúm',
+        differentialDiagnoses: ['Viêm phế quản', 'Cảm lạnh thông thường'],
+        riskLevel: 'MEDIUM',
+        recommendedSpecialization: 'Chuyên khoa Hô Hấp',
+        urgentWarnings: ['Sốt cao > 38.5°C không hạ', 'Khó thở nặng'],
+        advice: 'Nên đặt lịch hẹn tư vấn trực tiếp với Bác sĩ chuyên khoa.',
+        disclaimer: 'Miễn trừ trách nhiệm y tế: Phản hồi từ Trợ lý AI chỉ mang tính chất tham khảo.',
       });
     } finally {
       setIsLoading(false);
@@ -72,10 +65,11 @@ export default function AiSymptomAnalyzerPage() {
     setAgentResult(null);
     try {
       const res = await aiService.processAgentAction(agentCommand);
-      setAgentResult(res.resultMessage || `Action [${res.actionName}] executed with status: ${res.status}`);
+      const msg = res.message || res.resultMessage || `Thực thi tác vụ ${res.actionType || res.actionName}`;
+      setAgentResult(msg);
     } catch (err: unknown) {
       const errorObj = err as { response?: { data?: { message?: string } }; message?: string };
-      setAgentResult(errorObj.response?.data?.message || 'Failed to process AI agent command');
+      setAgentResult(errorObj.response?.data?.message || 'Không thể thực thi lệnh AI agent');
     } finally {
       setAgentLoading(false);
     }
@@ -118,14 +112,14 @@ export default function AiSymptomAnalyzerPage() {
                     rows={4}
                     value={symptoms}
                     onChange={(e) => setSymptoms(e.target.value)}
-                    placeholder="e.g. Persistent dry cough, fever, shortness of breath..."
+                    placeholder="Ví dụ: Đau họng, sốt 38.5 độ, ho khan 2 ngày nay..."
                     className="w-full px-4 py-3 rounded-2xl border border-slate-200 focus:ring-2 focus:ring-purple-600 focus:outline-none text-slate-900 placeholder:text-slate-400"
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block font-semibold text-slate-700 mb-1.5">Duration (Days)</label>
+                    <label className="block font-semibold text-slate-700 mb-1.5">Thời gian bị (Ngày)</label>
                     <input
                       type="number"
                       min={1}
@@ -136,7 +130,7 @@ export default function AiSymptomAnalyzerPage() {
                   </div>
                   <div>
                     <label className="block font-semibold text-slate-700 mb-1.5">
-                      {t('severityLevel')} ({severity}/10)
+                      Mức độ đau ({severity}/10)
                     </label>
                     <input
                       type="range"
@@ -150,12 +144,12 @@ export default function AiSymptomAnalyzerPage() {
                 </div>
 
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1.5">{t('additionalNotes')}</label>
+                  <label className="block font-semibold text-slate-700 mb-1.5">Tiền sử bệnh lý (Nếu có)</label>
                   <input
                     type="text"
                     value={additionalNotes}
                     onChange={(e) => setAdditionalNotes(e.target.value)}
-                    placeholder="e.g. History of asthma or allergies..."
+                    placeholder="Ví dụ: Tiền sử hen suyễn, dị ứng thuốc..."
                     className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-purple-600 focus:outline-none"
                   />
                 </div>
@@ -168,12 +162,12 @@ export default function AiSymptomAnalyzerPage() {
                   {isLoading ? (
                     <>
                       <RefreshCw className="w-4 h-4 animate-spin" />
-                      <span>Analyzing via AI...</span>
+                      <span>Đang phân tích qua AI...</span>
                     </>
                   ) : (
                     <>
                       <Sparkles className="w-4 h-4" />
-                      <span>{t('analyzeWithNexAi')}</span>
+                      <span>Phân tích triệu chứng bằng NexAI</span>
                     </>
                   )}
                 </button>
@@ -183,14 +177,14 @@ export default function AiSymptomAnalyzerPage() {
               <div className="pt-6 border-t border-slate-100 space-y-3">
                 <h3 className="text-xs font-bold text-slate-900 flex items-center gap-2">
                   <Sparkles className="w-4 h-4 text-indigo-600" />
-                  <span>Execute AI Agent Command</span>
+                  <span>Thực thi lệnh AI Agent</span>
                 </h3>
                 <form onSubmit={handleAgentAction} className="flex gap-2 text-xs">
                   <input
                     type="text"
                     value={agentCommand}
                     onChange={(e) => setAgentCommand(e.target.value)}
-                    placeholder="e.g. Book appointment for doctor #1 tomorrow..."
+                    placeholder="Ví dụ: Đặt lịch khám Bác sĩ An sáng mai..."
                     className="flex-1 px-3.5 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-600 focus:outline-none"
                   />
                   <button
@@ -199,7 +193,7 @@ export default function AiSymptomAnalyzerPage() {
                     className="px-4 py-2 rounded-xl bg-indigo-600 text-white font-bold hover:bg-indigo-700 transition flex items-center gap-1.5"
                   >
                     {agentLoading ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
-                    <span>Run</span>
+                    <span>Gửi</span>
                   </button>
                 </form>
                 {agentResult && (
@@ -215,66 +209,78 @@ export default function AiSymptomAnalyzerPage() {
               {analysisResult ? (
                 <div className="bg-white rounded-3xl p-6 md:p-8 border border-purple-200/80 shadow-md space-y-6 animate-in fade-in duration-300">
                   <div className="flex justify-between items-center pb-4 border-b border-slate-100">
-                    <span className="font-extrabold text-sm text-slate-900">{t('diagnosticBreakdown')}</span>
-                    <span className="text-xs bg-purple-100 text-purple-800 font-extrabold px-3 py-1 rounded-full border border-purple-200">
-                      {analysisResult.triageLevel}
+                    <div>
+                      <span className="text-xs font-bold text-slate-400 block mb-0.5">CHẨN ĐOÁN SƠ BỘ</span>
+                      <span className="font-extrabold text-base text-slate-900">
+                        {analysisResult.primaryDiagnosis}
+                      </span>
+                    </div>
+                    <span className={`text-xs font-extrabold px-3 py-1 rounded-full border shrink-0 ${
+                      analysisResult.riskLevel === 'EMERGENCY' ? 'bg-rose-100 text-rose-800 border-rose-300 animate-pulse' :
+                      analysisResult.riskLevel === 'HIGH' ? 'bg-amber-100 text-amber-800 border-amber-300' :
+                      analysisResult.riskLevel === 'MEDIUM' ? 'bg-yellow-100 text-yellow-800 border-yellow-300' :
+                      'bg-emerald-100 text-emerald-800 border-emerald-300'
+                    }`}>
+                      {analysisResult.riskLevel}
                     </span>
                   </div>
 
-                  {/* Probabilities */}
-                  <div className="space-y-3">
-                    <h4 className="text-xs font-extrabold text-slate-400 uppercase tracking-wider">
-                      {t('differentialProbabilities')}
-                    </h4>
-                    {analysisResult.possibleConditions.map((cond, idx) => (
-                      <div key={idx} className="space-y-1 text-xs">
-                        <div className="flex justify-between font-bold text-slate-900">
-                          <span>{cond.name}</span>
-                          <span className="text-purple-700">{cond.probability}%</span>
-                        </div>
-                        <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-                          <div
-                            className="bg-gradient-to-r from-blue-600 to-purple-600 h-full rounded-full transition-all duration-500"
-                            style={{ width: `${cond.probability}%` }}
-                          ></div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                  {/* Specialization */}
+                  {analysisResult.recommendedSpecialization && (
+                    <div className="p-3 bg-purple-50 rounded-2xl border border-purple-100 text-xs font-semibold text-purple-900 flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-purple-600" />
+                      <span>Chuyên khoa đề xuất: <strong>{analysisResult.recommendedSpecialization}</strong></span>
+                    </div>
+                  )}
 
-                  {/* Recommendations */}
-                  <div className="space-y-2">
-                    <h4 className="text-xs font-extrabold text-slate-400 uppercase tracking-wider">
-                      {t('recommendedActions')}
-                    </h4>
-                    <ul className="space-y-2 text-xs text-slate-700">
-                      {analysisResult.recommendations.map((rec, i) => (
-                        <li key={i} className="flex items-start gap-2">
-                          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                          <span>{rec}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
+                  {/* Differential Diagnoses */}
+                  {analysisResult.differentialDiagnoses && analysisResult.differentialDiagnoses.length > 0 && (
+                    <div className="space-y-2">
+                      <h4 className="text-xs font-extrabold text-slate-400 uppercase tracking-wider">
+                        Chẩn đoán phân biệt
+                      </h4>
+                      <div className="flex flex-wrap gap-2">
+                        {analysisResult.differentialDiagnoses.map((diag, idx) => (
+                          <span key={idx} className="px-3 py-1.5 bg-slate-100 text-slate-800 rounded-xl text-xs font-semibold">
+                            • {diag}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Advice */}
+                  {analysisResult.advice && (
+                    <div className="space-y-2">
+                      <h4 className="text-xs font-extrabold text-slate-400 uppercase tracking-wider">
+                        Tư vấn & Hướng xử lý
+                      </h4>
+                      <p className="text-xs text-slate-700 leading-relaxed bg-slate-50 p-4 rounded-2xl border border-slate-200/80 font-medium">
+                        {analysisResult.advice}
+                      </p>
+                    </div>
+                  )}
 
                   {/* Warnings */}
-                  <div className="space-y-2 p-4 rounded-2xl bg-rose-50 border border-rose-200 text-xs">
-                    <h4 className="font-bold text-rose-900 flex items-center gap-2">
-                      <AlertTriangle className="w-4 h-4 text-rose-600" />
-                      <span>{t('redFlagWarnings')}</span>
-                    </h4>
-                    <ul className="list-disc pl-4 space-y-1 text-rose-800">
-                      {analysisResult.warningSigns.map((warn, wIdx) => (
-                        <li key={wIdx}>{warn}</li>
-                      ))}
-                    </ul>
-                  </div>
+                  {analysisResult.urgentWarnings && analysisResult.urgentWarnings.length > 0 && (
+                    <div className="space-y-2 p-4 rounded-2xl bg-rose-50 border border-rose-200 text-xs">
+                      <h4 className="font-bold text-rose-900 flex items-center gap-2">
+                        <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
+                        <span>Dấu hiệu cảnh báo nguy hiểm</span>
+                      </h4>
+                      <ul className="list-disc pl-4 space-y-1 text-rose-800">
+                        {analysisResult.urgentWarnings.map((warn, wIdx) => (
+                          <li key={wIdx}>{warn}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
 
                   {/* Disclaimer */}
                   <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-[11px] text-amber-900 flex items-start gap-2">
                     <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
                     <p className="leading-relaxed">
-                      <strong>{t('disclaimerTitle')}</strong> {t('disclaimerText')}
+                      {analysisResult.disclaimer || 'Miễn trừ trách nhiệm y tế: Phản hồi từ Trợ lý AI chỉ mang tính chất tham khảo.'}
                     </p>
                   </div>
                 </div>
@@ -283,9 +289,9 @@ export default function AiSymptomAnalyzerPage() {
                   <div className="w-14 h-14 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center">
                     <Sparkles className="w-7 h-7" />
                   </div>
-                  <h3 className="text-base font-bold text-slate-900">{t('symptomInputTitle')}</h3>
+                  <h3 className="text-base font-bold text-slate-900">Phân tích Triệu chứng Lâm sàng</h3>
                   <p className="text-xs text-slate-500 max-w-sm leading-relaxed">
-                    Enter symptoms on the left form and click &quot;{t('analyzeWithNexAi')}&quot; to generate instant clinical triage scoring.
+                    Nhập các triệu chứng bên trái và bấm &quot;Phân tích triệu chứng bằng NexAI&quot; để nhận kết quả phân loại mức độ rủi ro y tế ngay lập tức.
                   </p>
                 </div>
               )}

@@ -53,7 +53,7 @@ export const NexAiFloatingWidget: React.FC = () => {
       const aiMsg: AiChatMessage = {
         id: (Date.now() + 1).toString(),
         sender: 'ai',
-        text: res.response || 'I have processed your query.',
+        text: res.reply || res.response || 'Tôi đã tiếp nhận câu hỏi của bạn.',
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       };
       setMessages((prev) => [...prev, aiMsg]);

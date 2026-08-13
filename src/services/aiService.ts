@@ -1,18 +1,14 @@
 import apiClient from '@/lib/axios';
 import {
+  AiChatResponse,
   AiSymptomAnalysisResult,
   AiAgentActionResult,
 } from '@/types/api';
 
-export interface AiChatResponse {
-  sessionId: string;
-  response: string;
-}
-
 export interface SymptomAnalysisParams {
   patientAge?: number;
   gender?: string;
-  symptoms: string[];
+  symptoms: string | string[];
   durationDays?: number;
   severityScale?: number;
   medicalHistory?: string;
@@ -20,19 +16,36 @@ export interface SymptomAnalysisParams {
 
 export interface MedicalRecordSummaryResponse {
   summary: string;
-  keyDiagnoses: string[];
+  keyDiagnoses?: string[];
   suggestedFollowUpDate?: string;
-  riskAssessment: string;
+  riskAssessment?: string;
 }
 
 export const aiService = {
   async chat(message: string, sessionId?: string, context?: string): Promise<AiChatResponse> {
     const res = await apiClient.post<AiChatResponse>('/ai/chat', { message, sessionId, context });
-    return res.data;
+    const data = res.data;
+    const textReply = data.reply || data.response || 'Tôi đã xử lý yêu cầu của bạn.';
+    return {
+      ...data,
+      reply: textReply,
+      response: textReply,
+    };
   },
 
   async analyzeSymptoms(request: SymptomAnalysisParams): Promise<AiSymptomAnalysisResult> {
-    const res = await apiClient.post<AiSymptomAnalysisResult>('/ai/analyze-symptoms', request);
+    const formattedSymptoms = Array.isArray(request.symptoms)
+      ? request.symptoms.join(', ')
+      : request.symptoms;
+
+    const payload = {
+      symptoms: formattedSymptoms,
+      durationDays: request.durationDays ?? 1,
+      patientAge: request.patientAge,
+      medicalHistory: request.medicalHistory,
+    };
+
+    const res = await apiClient.post<AiSymptomAnalysisResult>('/ai/analyze-symptoms', payload);
     return res.data;
   },
 

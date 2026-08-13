@@ -193,19 +193,37 @@ export interface AiChatMessage {
   timestamp: string;
 }
 
-export interface AiSymptomAnalysisResult {
-  triageLevel: string;
-  possibleConditions: { name: string; probability: number }[];
-  recommendations: string[];
-  warningSigns: string[];
-  suggestedAction: string;
+export interface AiChatResponse {
+  reply: string;
+  sessionId: string;
+  suggestedActions?: string[];
+  disclaimer?: string;
+  timestamp?: string;
+  response?: string; // alias
 }
 
+export interface SymptomAnalysisResponse {
+  primaryDiagnosis: string;
+  differentialDiagnoses: string[];
+  riskLevel: 'LOW' | 'MEDIUM' | 'HIGH' | 'EMERGENCY' | string;
+  recommendedSpecialization: string;
+  urgentWarnings: string[];
+  advice: string;
+  disclaimer: string;
+}
+
+export type AiSymptomAnalysisResult = SymptomAnalysisResponse;
+
 export interface AiAgentActionResult {
-  actionName: string;
-  status: string;
-  resultMessage: string;
-  payloadData?: Record<string, unknown>;
+  success: boolean;
+  actionType: string;
+  message: string;
+  resultData?: Record<string, unknown> | unknown;
+  executedAt?: string;
+  // legacy aliases
+  actionName?: string;
+  status?: string;
+  resultMessage?: string;
 }
 
 // ── Chat Types ──────────────────────────────────────────────────────────────
