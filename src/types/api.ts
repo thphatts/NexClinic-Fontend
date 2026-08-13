@@ -208,3 +208,44 @@ export interface AiAgentActionResult {
   payloadData?: Record<string, unknown>;
 }
 
+// ── Chat Types ──────────────────────────────────────────────────────────────
+
+export type ChatRoomStatus = 'ACTIVE' | 'CLOSED';
+
+export interface ChatRoom {
+  id: number;
+  appointmentId?: number;
+  doctorId: number;
+  doctorName: string;
+  patientId: number;
+  patientName: string;
+  status: ChatRoomStatus;
+  lastMessage?: string;
+  lastMessageAt?: string;
+  unreadCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ChatMessage {
+  id: number;
+  roomId: number;
+  senderId: string;
+  senderName: string;
+  senderRole: string;
+  content: string;
+  isRead: boolean;
+  readAt?: string;
+  createdAt: string;
+}
+
+export interface CreateChatRoomRequest {
+  doctorId: number;
+  patientId: number;
+  appointmentId?: number;
+}
+
+export interface SendMessageRequest {
+  roomId: number;
+  content: string;
+}

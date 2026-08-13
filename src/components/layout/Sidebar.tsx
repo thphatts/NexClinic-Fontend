@@ -18,6 +18,7 @@ import {
   LogOut,
   ChevronLeft,
   ChevronRight,
+  MessageSquare,
 } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 import { useAuthStore } from '@/store/useAuthStore';
@@ -98,6 +99,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggleCollapse })
           defaultName: 'Medical Records',
           href: '/medical-records',
           icon: FileText,
+          allowedRoles: ['ROLE_ADMIN', 'ROLE_DOCTOR', 'ROLE_PATIENT'],
+        },
+        {
+          nameKey: 'chat',
+          defaultName: 'Tin nhắn',
+          href: '/chat',
+          icon: MessageSquare,
           allowedRoles: ['ROLE_ADMIN', 'ROLE_DOCTOR', 'ROLE_PATIENT'],
         },
         {
