@@ -21,6 +21,10 @@ import {
   Brain,
   Baby,
   Loader2,
+  FileText,
+  CreditCard,
+  Sparkles,
+  PlusCircle,
 } from 'lucide-react';
 import {
   LineChart,
@@ -31,15 +35,19 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from 'recharts';
+import { useAuthStore } from '@/store/useAuthStore';
 
 export default function DashboardPage() {
   const { t } = useLanguage();
+  const { user } = useAuthStore();
 
   const [totalPatientsCount, setTotalPatientsCount] = useState<number>(0);
   const [totalDoctorsCount, setTotalDoctorsCount] = useState<number>(0);
   const [todayAppointmentsCount, setTodayAppointmentsCount] = useState<number>(0);
   const [recentAppointments, setRecentAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const isPatient = user?.role === 'ROLE_PATIENT';
 
   useEffect(() => {
     async function loadDashboardMetrics() {
@@ -53,7 +61,20 @@ export default function DashboardPage() {
         setTotalPatientsCount(patientsRes.totalElements || 0);
         setTotalDoctorsCount(doctorsRes.totalElements || 0);
         setTodayAppointmentsCount(appointmentsRes.totalElements || 0);
-        setRecentAppointments(appointmentsRes.items || appointmentsRes.content || []);
+
+        const allAppts = appointmentsRes.items || appointmentsRes.content || [];
+        if (isPatient) {
+          // Filter personal appointments for patient
+          const myAppts = allAppts.filter(
+            (apt: Appointment) =>
+              apt.patientName === user?.name ||
+              apt.patientId?.toString() === user?.id ||
+              apt.patientId?.toString() === user?.citizenId
+          );
+          setRecentAppointments(myAppts);
+        } else {
+          setRecentAppointments(allAppts);
+        }
       } catch {
         // ignore
       } finally {
@@ -61,7 +82,7 @@ export default function DashboardPage() {
       }
     }
     loadDashboardMetrics();
-  }, []);
+  }, [isPatient, user?.name, user?.id, user?.citizenId]);
 
   const chartData = [
     { name: 'Mon', appointments: 24, emergency: 4 },
@@ -73,15 +94,147 @@ export default function DashboardPage() {
     { name: 'Sun', appointments: 15, emergency: 1 },
   ];
 
+  const displayName = user?.name || user?.username || 'Bạn';
+
   return (
     <AppLayout title={t('dashboardTitle')}>
       <RoleGuard allowedRoles={['ROLE_ADMIN', 'ROLE_DOCTOR', 'ROLE_STAFF', 'ROLE_PATIENT']}>
         <div className="space-y-6">
           {/* Welcome Section */}
           <div className="space-y-1">
-            <h2 className="text-2xl font-bold text-slate-900 tracking-tight">{t('goodMorning')}</h2>
-            <p className="text-sm text-slate-500">{t('overviewSubtitle')}</p>
+            <h2 className="text-2xl font-bold text-slate-900 tracking-tight">
+              Xin chào, {displayName} 👋
+            </h2>
+            <p className="text-sm text-slate-500">
+              {isPatient
+                ? 'Chào mừng bạn đến với Cổng thông tin chăm sóc sức khỏe cá nhân NexClinic'
+                : t('overviewSubtitle')}
+            </p>
           </div>
+
+          {/* Patient-Specific Portal Dashboard */}
+          {isPatient ? (
+            <div className="space-y-6">
+              {/* Quick Action Cards Grid for Patient */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <Link
+                  href="/appointments"
+                  className="bg-gradient-to-br from-blue-600 to-blue-700 text-white rounded-2xl p-5 shadow-sm flex flex-col justify-between space-y-4 hover:shadow-md hover:scale-[1.01] transition-all"
+                >
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs font-bold uppercase tracking-wider text-blue-100">
+                      Đặt Lịch Khám
+                    </span>
+                    <PlusCircle className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-extrabold">Đăng Ký Khám Mới</h3>
+                    <p className="text-xs text-blue-100 mt-1">Chọn bác sĩ & giờ khám linh hoạt</p>
+                  </div>
+                </Link>
+
+                <Link
+                  href="/medical-records"
+                  className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs flex flex-col justify-between space-y-4 hover:border-blue-400 transition-all"
+                >
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                      Hồ Sơ Sức Khỏe
+                    </span>
+                    <FileText className="w-5 h-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-extrabold text-slate-900">Bệnh Án Cá Nhân</h3>
+                    <p className="text-xs text-slate-500 mt-1">Xem lịch sử chẩn đoán & đơn thuốc</p>
+                  </div>
+                </Link>
+
+                <Link
+                  href="/payments"
+                  className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs flex flex-col justify-between space-y-4 hover:border-purple-400 transition-all"
+                >
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                      Thanh Toán
+                    </span>
+                    <CreditCard className="w-5 h-5 text-purple-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-extrabold text-slate-900">Hóa Đơn & VNPay</h3>
+                    <p className="text-xs text-slate-500 mt-1">Thanh toán trực tuyến tiện lợi</p>
+                  </div>
+                </Link>
+
+                <Link
+                  href="/ai"
+                  className="bg-gradient-to-br from-purple-600 to-indigo-600 text-white rounded-2xl p-5 shadow-sm flex flex-col justify-between space-y-4 hover:shadow-md hover:scale-[1.01] transition-all"
+                >
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs font-bold uppercase tracking-wider text-purple-200">
+                      Hỗ Trợ AI
+                    </span>
+                    <Sparkles className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-extrabold">Trợ Lý NexAI</h3>
+                    <p className="text-xs text-purple-100 mt-1">Tư vấn triệu chứng & sức khỏe 24/7</p>
+                  </div>
+                </Link>
+              </div>
+
+              {/* My Appointments Table */}
+              <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs p-6 space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                    <Calendar className="w-5 h-5 text-blue-600" />
+                    <span>Lịch Khám Của Bạn</span>
+                  </h3>
+                  <Link
+                    href="/appointments"
+                    className="text-xs font-bold text-blue-600 hover:underline flex items-center gap-1"
+                  >
+                    <span>Xem tất cả</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </Link>
+                </div>
+
+                {recentAppointments.length === 0 ? (
+                  <div className="text-center py-8 text-slate-400 text-xs font-semibold">
+                    Bạn chưa có lịch hẹn khám nào gần đây.
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs">
+                      <thead>
+                        <tr className="border-b border-slate-100 text-slate-400 font-bold uppercase text-[10px]">
+                          <th className="py-3 px-4">THỜI GIAN</th>
+                          <th className="py-3 px-4">BÁC SĨ PHỤ TRÁCH</th>
+                          <th className="py-3 px-4">LY DÓ KHÁM</th>
+                          <th className="py-3 px-4 text-right">TRẠNG THÁI</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 font-semibold text-slate-700">
+                        {recentAppointments.map((apt) => (
+                          <tr key={apt.id} className="hover:bg-slate-50/50 transition">
+                            <td className="py-3 px-4 font-bold text-slate-900">
+                              {apt.appointmentDate} ({apt.timeSlot || 'Ca khám'})
+                            </td>
+                            <td className="py-3 px-4 text-blue-600">{apt.doctorName || 'Bác sĩ trực'}</td>
+                            <td className="py-3 px-4 text-slate-500">{apt.reason || 'Khám tổng quát'}</td>
+                            <td className="py-3 px-4 text-right">
+                              <Badge variant={apt.status} />
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : (
+            /* Clinic Overview Dashboard for ADMIN, DOCTOR, STAFF */
+            <>
 
           {/* Core Stats Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -320,6 +473,8 @@ export default function DashboardPage() {
               </div>
             )}
           </div>
+          </>
+          )}
         </div>
       </RoleGuard>
     </AppLayout>

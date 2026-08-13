@@ -13,13 +13,18 @@ import { patientService } from '@/services/patientService';
 import { doctorService } from '@/services/doctorService';
 import { paymentService } from '@/services/paymentService';
 import { Appointment, AppointmentStatus, Patient, Doctor, AvailableSlot } from '@/types/api';
+import { useAuthStore } from '@/store/useAuthStore';
 import { Search, Plus, Clock, Filter, CreditCard, Trash2, Loader2 } from 'lucide-react';
 
 export default function AppointmentsPage() {
   const { t } = useLanguage();
+  const { user } = useAuthStore();
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const isPatient = user?.role === 'ROLE_PATIENT';
+  const isAdminOrStaff = user?.role === 'ROLE_ADMIN' || user?.role === 'ROLE_STAFF' || user?.role === 'ROLE_DOCTOR';
 
   // Filter & Pagination
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
@@ -54,7 +59,19 @@ export default function AppointmentsPage() {
         size: pageSize,
         status: statusFilter !== 'ALL' ? (statusFilter as AppointmentStatus) : undefined,
       });
-      setAppointments(res.items || res.content || []);
+      const rawItems = res.items || res.content || [];
+      if (isPatient) {
+        // Filter personal appointments for patient
+        const myItems = rawItems.filter(
+          (apt) =>
+            apt.patientName === user?.name ||
+            apt.patientId?.toString() === user?.id ||
+            apt.patientId?.toString() === user?.citizenId
+        );
+        setAppointments(myItems);
+      } else {
+        setAppointments(rawItems);
+      }
       setTotalPages(res.totalPages || 1);
       setTotalElements(res.totalElements || 0);
     } catch (err: unknown) {
@@ -63,7 +80,7 @@ export default function AppointmentsPage() {
     } finally {
       setLoading(false);
     }
-  }, [page, pageSize, statusFilter]);
+  }, [page, pageSize, statusFilter, isPatient, user?.name, user?.id, user?.citizenId]);
 
   useEffect(() => {
     fetchAppointments();

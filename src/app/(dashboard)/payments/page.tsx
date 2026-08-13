@@ -10,13 +10,18 @@ import { formatCurrency } from '@/lib/format';
 import { appointmentService } from '@/services/appointmentService';
 import { paymentService } from '@/services/paymentService';
 import { Appointment, Payment } from '@/types/api';
+import { useAuthStore } from '@/store/useAuthStore';
 import { CreditCard, ExternalLink, Search, Loader2 } from 'lucide-react';
 
 export default function PaymentsPage() {
   const { t } = useLanguage();
+  const { user } = useAuthStore();
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const isPatient = user?.role === 'ROLE_PATIENT';
+  const isAdminOrStaff = user?.role === 'ROLE_ADMIN' || user?.role === 'ROLE_STAFF';
 
   // Pagination & Search
   const [search, setSearch] = useState('');
@@ -34,7 +39,19 @@ export default function PaymentsPage() {
         page,
         size: pageSize,
       });
-      setAppointments(res.items || res.content || []);
+      const rawItems = res.items || res.content || [];
+      if (isPatient) {
+        // Filter personal payments for patient
+        const myItems = rawItems.filter(
+          (apt) =>
+            apt.patientName === user?.name ||
+            apt.patientId?.toString() === user?.id ||
+            apt.patientId?.toString() === user?.citizenId
+        );
+        setAppointments(myItems);
+      } else {
+        setAppointments(rawItems);
+      }
       setTotalPages(res.totalPages || 1);
       setTotalElements(res.totalElements || 0);
     } catch (err: unknown) {
@@ -43,7 +60,7 @@ export default function PaymentsPage() {
     } finally {
       setLoading(false);
     }
-  }, [page, pageSize]);
+  }, [page, pageSize, isPatient, user?.name, user?.id, user?.citizenId]);
 
   useEffect(() => {
     fetchPaymentAppointments();
@@ -90,24 +107,26 @@ export default function PaymentsPage() {
               />
             </div>
 
-            <div className="flex items-center gap-2 w-full sm:w-auto">
-              <input
-                type="number"
-                placeholder="Appointment ID..."
-                value={appointmentIdInput}
-                onChange={(e) => setAppointmentIdInput(e.target.value)}
-                className="px-3.5 py-2.5 rounded-xl bg-slate-100 border-none text-xs text-slate-900 focus:ring-2 focus:ring-blue-600 focus:outline-none"
-              />
-              <button
-                onClick={() => {
-                  if (appointmentIdInput) handleVnPayCheckout(Number(appointmentIdInput));
-                }}
-                className="px-4 py-2.5 rounded-xl bg-blue-600 text-white font-bold text-xs hover:bg-blue-700 transition flex items-center gap-1.5 shrink-0"
-              >
-                <ExternalLink className="w-3.5 h-3.5" />
-                <span>Create VNPay Link</span>
-              </button>
-            </div>
+            {isAdminOrStaff && (
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                <input
+                  type="number"
+                  placeholder="Appointment ID..."
+                  value={appointmentIdInput}
+                  onChange={(e) => setAppointmentIdInput(e.target.value)}
+                  className="px-3.5 py-2.5 rounded-xl bg-slate-100 border-none text-xs text-slate-900 focus:ring-2 focus:ring-blue-600 focus:outline-none"
+                />
+                <button
+                  onClick={() => {
+                    if (appointmentIdInput) handleVnPayCheckout(Number(appointmentIdInput));
+                  }}
+                  className="px-4 py-2.5 rounded-xl bg-blue-600 text-white font-bold text-xs hover:bg-blue-700 transition flex items-center gap-1.5 shrink-0"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" />
+                  <span>Create VNPay Link</span>
+                </button>
+              </div>
+            )}
           </div>
 
           {error && (
