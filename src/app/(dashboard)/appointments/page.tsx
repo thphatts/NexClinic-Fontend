@@ -35,6 +35,7 @@ export default function AppointmentsPage() {
   // Patients & Doctors list for booking modal dropdowns
   const [patientsList, setPatientsList] = useState<Patient[]>([]);
   const [doctorsList, setDoctorsList] = useState<Doctor[]>([]);
+  const [myPatientProfile, setMyPatientProfile] = useState<Patient | null>(null);
   const [availableSlots, setAvailableSlots] = useState<AvailableSlot[]>([]);
   const [loadingSlots, setLoadingSlots] = useState(false);
 
@@ -63,9 +64,9 @@ export default function AppointmentsPage() {
         // Filter personal appointments for patient
         const myItems = rawItems.filter(
           (apt) =>
+            (myPatientProfile && apt.patientId === myPatientProfile.id) ||
             apt.patientName === user?.name ||
-            apt.patientId?.toString() === user?.id ||
-            apt.patientId?.toString() === user?.citizenId
+            apt.patientId?.toString() === user?.id
         );
         setAppointments(myItems);
       } else {
@@ -87,22 +88,31 @@ export default function AppointmentsPage() {
 
   const loadPatientsAndDoctors = async () => {
     try {
-      const [patRes, docRes] = await Promise.all([
-        patientService.getAllPatients({ page: 1, size: 50 }).catch(() => ({ items: [], content: [] })),
-        doctorService.getAllDoctors({ page: 1, size: 50 }).catch(() => ({ items: [], content: [] })),
-      ]);
-      const pats = patRes.items || patRes.content || [];
+      const docRes = await doctorService.getAllDoctors({ page: 1, size: 50 }).catch(() => ({ items: [], content: [] }));
       const docs = docRes.items || docRes.content || [];
-      setPatientsList(pats);
       setDoctorsList(docs);
 
-      if (pats.length > 0 && docs.length > 0) {
-        setFormData((prev) => ({
-          ...prev,
-          patientId: pats[0].id,
-          doctorId: docs[0].id,
-        }));
+      let pId = 0;
+      if (isPatient) {
+        try {
+          const myProfile = await patientService.getMyPatientProfile();
+          setMyPatientProfile(myProfile);
+          pId = myProfile.id;
+        } catch {
+          // Ignore if patient profile lookup fails
+        }
+      } else {
+        const patRes = await patientService.getAllPatients({ page: 1, size: 50 }).catch(() => ({ items: [], content: [] }));
+        const pats = patRes.items || patRes.content || [];
+        setPatientsList(pats);
+        if (pats.length > 0) pId = pats[0].id;
       }
+
+      setFormData((prev) => ({
+        ...prev,
+        patientId: pId || prev.patientId,
+        doctorId: docs.length > 0 ? docs[0].id : prev.doctorId,
+      }));
     } catch {
       // ignore
     }
@@ -343,17 +353,31 @@ export default function AppointmentsPage() {
           <form onSubmit={handleSubmit} className="space-y-4 text-xs">
             <div>
               <label className="block font-semibold text-slate-700 mb-1">{t('selectPatient')}</label>
-              <select
-                value={formData.patientId}
-                onChange={(e) => setFormData({ ...formData, patientId: Number(e.target.value) })}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-600 focus:outline-none bg-white"
-              >
-                {patientsList.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.fullName} ({p.phone})
-                  </option>
-                ))}
-              </select>
+              {isPatient ? (
+                <input
+                  type="text"
+                  readOnly
+                  disabled
+                  value={
+                    myPatientProfile
+                      ? `${myPatientProfile.fullName} (${myPatientProfile.phone})`
+                      : user?.name || user?.username || 'Bệnh nhân hiện tại'
+                  }
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-100 text-slate-700 font-medium cursor-not-allowed"
+                />
+              ) : (
+                <select
+                  value={formData.patientId}
+                  onChange={(e) => setFormData({ ...formData, patientId: Number(e.target.value) })}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-600 focus:outline-none bg-white font-medium text-slate-800"
+                >
+                  {patientsList.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.fullName} ({p.phone})
+                    </option>
+                  ))}
+                </select>
+              )}
             </div>
 
             <div>
@@ -361,7 +385,7 @@ export default function AppointmentsPage() {
               <select
                 value={formData.doctorId}
                 onChange={(e) => setFormData({ ...formData, doctorId: Number(e.target.value) })}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-600 focus:outline-none bg-white"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-600 focus:outline-none bg-white font-medium text-slate-800"
               >
                 {doctorsList.map((d) => (
                   <option key={d.id} value={d.id}>
@@ -379,25 +403,25 @@ export default function AppointmentsPage() {
                   type="date"
                   value={formData.appointmentDate}
                   onChange={(e) => setFormData({ ...formData, appointmentDate: e.target.value })}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-600 focus:outline-none"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-600 focus:outline-none font-medium text-slate-800"
                 />
               </div>
 
               <div>
                 <label className="block font-semibold text-slate-700 mb-1">Available Time Slot</label>
                 {loadingSlots ? (
-                  <div className="px-3.5 py-2.5 rounded-xl border border-slate-200 text-slate-400 font-medium">
+                  <div className="px-3.5 py-2.5 rounded-xl border border-slate-200 text-slate-400 font-medium animate-pulse">
                     Loading slots...
                   </div>
                 ) : availableSlots.length === 0 ? (
-                  <div className="px-3.5 py-2.5 rounded-xl border border-rose-200 text-rose-600 font-medium">
-                    No open slots
+                  <div className="px-3 py-2 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-[11px] font-medium leading-tight">
+                    ⚠️ Bác sĩ chưa có ca trực vào ngày này. Vui lòng chọn ngày khác.
                   </div>
                 ) : (
                   <select
                     value={formData.timeSlot}
                     onChange={(e) => setFormData({ ...formData, timeSlot: e.target.value })}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-600 focus:outline-none bg-white"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-600 focus:outline-none bg-white font-medium text-slate-800"
                   >
                     {availableSlots.map((s, idx) => (
                       <option key={idx} value={s.timeSlotLabel}>
