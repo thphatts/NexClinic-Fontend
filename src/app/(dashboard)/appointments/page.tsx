@@ -14,7 +14,7 @@ import { doctorService } from '@/services/doctorService';
 import { paymentService } from '@/services/paymentService';
 import { Appointment, AppointmentStatus, Patient, Doctor, AvailableSlot } from '@/types/api';
 import { useAuthStore } from '@/store/useAuthStore';
-import { Search, Plus, Clock, Filter, CreditCard, Trash2, Loader2 } from 'lucide-react';
+import { Plus, Clock, Filter, CreditCard, Trash2, Loader2 } from 'lucide-react';
 
 export default function AppointmentsPage() {
   const { t } = useLanguage();
@@ -24,7 +24,6 @@ export default function AppointmentsPage() {
   const [error, setError] = useState<string | null>(null);
 
   const isPatient = user?.role === 'ROLE_PATIENT';
-  const isAdminOrStaff = user?.role === 'ROLE_ADMIN' || user?.role === 'ROLE_STAFF' || user?.role === 'ROLE_DOCTOR';
 
   // Filter & Pagination
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
