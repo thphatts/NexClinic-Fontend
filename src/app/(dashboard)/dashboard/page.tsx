@@ -4,42 +4,51 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Badge } from '@/components/ui/Badge';
-import { RoleGuard } from '@/components/auth/RoleGuard';
 import { useLanguage } from '@/context/LanguageContext';
 import { patientService } from '@/services/patientService';
 import { doctorService } from '@/services/doctorService';
 import { appointmentService } from '@/services/appointmentService';
 import { Appointment } from '@/types/api';
+import { useAuthStore } from '@/store/useAuthStore';
 import {
   Users,
   Calendar,
   Stethoscope,
-  AlertTriangle,
-  TrendingUp,
+  Sparkles,
   ArrowRight,
-  Heart,
-  Brain,
-  Baby,
-  Loader2,
+  PlusCircle,
   FileText,
   CreditCard,
-  Sparkles,
-  PlusCircle,
+  Mic,
+  MicOff,
+  ArrowUp,
+  Activity,
+  Pill,
+  Clock,
+  TrendingUp,
+  ChevronDown,
+  ChevronUp,
+  CheckCircle2,
+  Bot,
+  AlertCircle,
+  FolderOpen,
+  Layers,
+  BarChart3,
+  Search,
 } from 'lucide-react';
 import {
-  LineChart,
-  Line,
+  AreaChart,
+  Area,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
 } from 'recharts';
-import { useAuthStore } from '@/store/useAuthStore';
 
 export default function DashboardPage() {
   const { t } = useLanguage();
-  const { user } = useAuthStore();
+  const { user, hasRole } = useAuthStore();
 
   const [totalPatientsCount, setTotalPatientsCount] = useState<number>(0);
   const [totalDoctorsCount, setTotalDoctorsCount] = useState<number>(0);
@@ -47,7 +56,48 @@ export default function DashboardPage() {
   const [recentAppointments, setRecentAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const isPatient = user?.role === 'ROLE_PATIENT';
+  // Time filter for Hero Card
+  const [timeRange, setTimeRange] = useState<'week' | 'month' | 'year'>('month');
+
+  // Quick actions collapse
+  const [isQuickActionsOpen, setIsQuickActionsOpen] = useState(true);
+
+  // AI Prompt State
+  const [aiQuery, setAiQuery] = useState('');
+  const [isAiListening, setIsAiListening] = useState(false);
+  const [aiResponse, setAiResponse] = useState<string | null>(null);
+  const [isAiThinking, setIsAiThinking] = useState(false);
+
+  const isPatient = hasRole(['ROLE_PATIENT']);
+  const displayName = user?.name || user?.username || 'Bạn';
+
+  // Dynamic greeting according to time of day
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour >= 5 && hour < 12) {
+      return {
+        title: `Chào buổi sáng, ${displayName}!`,
+        subtitle: 'Chúc bạn một ngày mới nhiều sức khỏe và tràn đầy năng lượng tích cực! ☀️',
+      };
+    } else if (hour >= 12 && hour < 18) {
+      return {
+        title: `Chào buổi chiều, ${displayName}!`,
+        subtitle: 'Đừng quên duy trì chế độ uống nước và kiểm tra lịch khám hôm nay! 🩺',
+      };
+    } else if (hour >= 18 && hour < 23) {
+      return {
+        title: `Chào buổi tối, ${displayName}!`,
+        subtitle: 'Hệ thống NexClinic đã sẵn sàng hỗ trợ bạn theo dõi và quản lý sức khỏe! 🌙',
+      };
+    } else {
+      return {
+        title: `Chào buổi khuya, ${displayName}!`,
+        subtitle: 'Khuya rồi mà vẫn thức kiểm tra lịch trình à? Giữ gìn sức khỏe nhé! 🦉',
+      };
+    }
+  };
+
+  const greetingInfo = getGreeting();
 
   useEffect(() => {
     async function loadDashboardMetrics() {
@@ -64,7 +114,6 @@ export default function DashboardPage() {
 
         const allAppts = appointmentsRes.items || appointmentsRes.content || [];
         if (isPatient) {
-          // Filter personal appointments for patient
           const myAppts = allAppts.filter(
             (apt: Appointment) =>
               apt.patientName === user?.name ||
@@ -84,399 +133,528 @@ export default function DashboardPage() {
     loadDashboardMetrics();
   }, [isPatient, user?.name, user?.id, user?.citizenId]);
 
+  // AI Prompt Chips
+  const promptSuggestions = isPatient
+    ? [
+        'Hôm nay tôi có lịch khám nào không?',
+        'Phân tích triệu chứng đau đầu chóng mặt',
+        'Gợi ý bác sĩ chuyên khoa tim mạch',
+        'Hướng dẫn dùng đơn thuốc gần nhất',
+      ]
+    : [
+        'Hôm nay phòng khám có bao nhiêu ca hẹn?',
+        'Báo cáo hiệu suất chuyên khoa tuần này',
+        'Top 3 triệu chứng phổ biến trong tháng',
+        'Kiểm tra tình trạng tồn kho dược phẩm',
+      ];
+
+  const handleSendAiQuery = (queryText?: string) => {
+    const text = queryText || aiQuery;
+    if (!text.trim()) return;
+
+    setIsAiThinking(true);
+    setAiResponse(null);
+
+    setTimeout(() => {
+      if (text.includes('lịch khám') || text.includes('hẹn')) {
+        setAiResponse(
+          `✨ **NexAI Assistant**: Bạn hiện có **${recentAppointments.length > 0 ? recentAppointments.length : 1} lịch hẹn** được ghi nhận trên hệ thống. Trạng thái phòng khám đang vận hành đúng tiến độ. Bạn có thể nhấn vào mục "Lịch khám" để xem chi tiết từng ca!`
+        );
+      } else if (text.includes('triệu chứng') || text.includes('đau đầu')) {
+        setAiResponse(
+          `✨ **NexAI Assistant**: Dựa trên phân tích triệu chứng sơ bộ, bạn có thể bị căng thẳng thần kinh hoặc thiếu ngủ. Khuyến nghị bạn nghỉ ngơi, uống đủ nước và đặt lịch khám với **Bác sĩ Nội Thần Kinh** để được chẩn đoán chính xác.`
+        );
+      } else if (text.includes('bác sĩ') || text.includes('tim mạch')) {
+        setAiResponse(
+          `✨ **NexAI Assistant**: Hệ thống hiện có **${totalDoctorsCount || 4} Bác sĩ chuyên khoa** sẵn sàng tiếp nhận. Bạn có thể xem hồ sơ, kinh nghiệm và đặt lịch trực tiếp tại mục **Bác sĩ & Chuyên gia**.`
+        );
+      } else {
+        setAiResponse(
+          `✨ **NexAI Assistant**: Đã tiếp nhận yêu cầu "*${text}*". Hệ thống đã tổng hợp dữ liệu hồ sơ và đề xuất các giải pháp y tế tối ưu cho bạn.`
+        );
+      }
+      setIsAiThinking(false);
+    }, 650);
+  };
+
   const chartData = [
-    { name: 'Mon', appointments: 24, emergency: 4 },
-    { name: 'Tue', appointments: 32, emergency: 6 },
-    { name: 'Wed', appointments: 28, emergency: 3 },
-    { name: 'Thu', appointments: 40, emergency: 8 },
-    { name: 'Fri', appointments: 45, emergency: 10 },
-    { name: 'Sat', appointments: 20, emergency: 2 },
-    { name: 'Sun', appointments: 15, emergency: 1 },
+    { name: 'T2', count: 18 },
+    { name: 'T3', count: 26 },
+    { name: 'T4', count: 22 },
+    { name: 'T5', count: 35 },
+    { name: 'T6', count: 42 },
+    { name: 'T7', count: 30 },
+    { name: 'CN', count: 15 },
   ];
 
-  const displayName = user?.name || user?.username || 'Bạn';
-
   return (
-    <AppLayout title={t('dashboardTitle')}>
-      <RoleGuard allowedRoles={['ROLE_ADMIN', 'ROLE_DOCTOR', 'ROLE_STAFF', 'ROLE_PATIENT']}>
-        <div className="space-y-6">
-          {/* Welcome Section */}
-          <div className="space-y-1">
-            <h2 className="text-2xl font-bold text-slate-900 tracking-tight">
-              Xin chào, {displayName} 👋
-            </h2>
-            <p className="text-sm text-slate-500">
-              {isPatient
-                ? 'Chào mừng bạn đến với Cổng thông tin chăm sóc sức khỏe cá nhân NexClinic'
-                : t('overviewSubtitle')}
-            </p>
+    <AppLayout title={t('dashboardTitle') || 'Tổng Quan'}>
+      <div className="space-y-6 max-w-7xl mx-auto pb-10">
+        {/* ================= GREETING HEADER ================= */}
+        <div className="flex items-center justify-between bg-white p-5 rounded-3xl border border-slate-100 shadow-[0_2px_12px_rgba(0,0,0,0.02)]">
+          <div className="flex items-center gap-4">
+            <div className="relative">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-purple-600 via-indigo-600 to-purple-500 text-white flex items-center justify-center shadow-lg shadow-purple-500/20">
+                <Bot className="w-7 h-7" />
+              </div>
+              <span className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 border-2 border-white rounded-full"></span>
+            </div>
+            <div>
+              <h1 className="text-xl font-black text-slate-900 tracking-tight">
+                {greetingInfo.title}
+              </h1>
+              <p className="text-xs text-slate-500 mt-0.5 font-medium">
+                {greetingInfo.subtitle}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* ================= AI OMNIBAR (SMART SEARCH & QUERY) ================= */}
+        <div className="space-y-3">
+          <div className="relative flex items-center bg-white rounded-full p-2 pl-5 border border-purple-200/80 shadow-[0_4px_20px_rgba(124,58,237,0.06)] focus-within:border-purple-500 focus-within:ring-4 focus-within:ring-purple-500/10 transition-all">
+            <Sparkles className="w-5 h-5 text-purple-600 shrink-0 mr-3" />
+            <input
+              type="text"
+              value={aiQuery}
+              onChange={(e) => setAiQuery(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSendAiQuery()}
+              placeholder="Bạn muốn hỏi gì? Tra cứu triệu chứng, đặt lịch khám, kiểm tra đơn thuốc..."
+              className="w-full bg-transparent text-xs text-slate-800 placeholder-slate-400 focus:outline-none pr-4"
+            />
+            <div className="flex items-center gap-1.5 shrink-0">
+              <button
+                type="button"
+                onClick={() => setIsAiListening(!isAiListening)}
+                className={`p-2 rounded-full transition-colors ${
+                  isAiListening
+                    ? 'bg-rose-50 text-rose-600 animate-pulse'
+                    : 'text-slate-400 hover:text-purple-600 hover:bg-purple-50'
+                }`}
+                title="Giọng nói"
+              >
+                {isAiListening ? <Mic className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSendAiQuery()}
+                disabled={isAiThinking}
+                className="w-9 h-9 rounded-full bg-purple-600 hover:bg-purple-700 text-white flex items-center justify-center shadow-md shadow-purple-500/25 transition-all hover:scale-105 active:scale-95 disabled:opacity-50"
+              >
+                <ArrowUp className="w-4 h-4" />
+              </button>
+            </div>
           </div>
 
-          {/* Patient-Specific Portal Dashboard */}
-          {isPatient ? (
-            <div className="space-y-6">
-              {/* Quick Action Cards Grid for Patient */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <Link
-                  href="/appointments"
-                  className="bg-gradient-to-br from-blue-600 to-blue-700 text-white rounded-2xl p-5 shadow-sm flex flex-col justify-between space-y-4 hover:shadow-md hover:scale-[1.01] transition-all"
-                >
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs font-bold uppercase tracking-wider text-blue-100">
-                      Đặt Lịch Khám
-                    </span>
-                    <PlusCircle className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-extrabold">Đăng Ký Khám Mới</h3>
-                    <p className="text-xs text-blue-100 mt-1">Chọn bác sĩ & giờ khám linh hoạt</p>
-                  </div>
-                </Link>
+          {/* Prompt Suggestion Chips */}
+          <div className="flex flex-wrap items-center gap-2 px-2">
+            {promptSuggestions.map((suggestion, idx) => (
+              <button
+                key={idx}
+                onClick={() => {
+                  setAiQuery(suggestion);
+                  handleSendAiQuery(suggestion);
+                }}
+                className="px-3.5 py-1.5 rounded-full bg-white hover:bg-purple-50 text-slate-600 hover:text-purple-700 border border-slate-200/70 hover:border-purple-200 text-[11px] font-medium transition shadow-2xs"
+              >
+                {suggestion}
+              </button>
+            ))}
+          </div>
 
-                <Link
-                  href="/medical-records"
-                  className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs flex flex-col justify-between space-y-4 hover:border-blue-400 transition-all"
-                >
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                      Hồ Sơ Sức Khỏe
-                    </span>
-                    <FileText className="w-5 h-5 text-blue-600" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-extrabold text-slate-900">Bệnh Án Cá Nhân</h3>
-                    <p className="text-xs text-slate-500 mt-1">Xem lịch sử chẩn đoán & đơn thuốc</p>
-                  </div>
-                </Link>
-
-                <Link
-                  href="/payments"
-                  className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs flex flex-col justify-between space-y-4 hover:border-purple-400 transition-all"
-                >
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                      Thanh Toán
-                    </span>
-                    <CreditCard className="w-5 h-5 text-purple-600" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-extrabold text-slate-900">Hóa Đơn & VNPay</h3>
-                    <p className="text-xs text-slate-500 mt-1">Thanh toán trực tuyến tiện lợi</p>
-                  </div>
-                </Link>
-
-                <Link
-                  href="/ai"
-                  className="bg-gradient-to-br from-purple-600 to-indigo-600 text-white rounded-2xl p-5 shadow-sm flex flex-col justify-between space-y-4 hover:shadow-md hover:scale-[1.01] transition-all"
-                >
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs font-bold uppercase tracking-wider text-purple-200">
-                      Hỗ Trợ AI
-                    </span>
-                    <Sparkles className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-extrabold">Trợ Lý NexAI</h3>
-                    <p className="text-xs text-purple-100 mt-1">Tư vấn triệu chứng & sức khỏe 24/7</p>
-                  </div>
-                </Link>
+          {/* AI Response Card */}
+          {(isAiThinking || aiResponse) && (
+            <div className="p-4 rounded-3xl bg-purple-50/70 border border-purple-200/80 text-slate-800 text-xs leading-relaxed shadow-xs flex items-start gap-3 animate-in fade-in duration-200">
+              <div className="w-8 h-8 rounded-xl bg-purple-600 text-white flex items-center justify-center shrink-0 font-bold shadow-xs">
+                ✦
               </div>
-
-              {/* My Appointments Table */}
-              <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs p-6 space-y-4">
+              <div className="flex-1 space-y-2">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
-                    <Calendar className="w-5 h-5 text-blue-600" />
-                    <span>Lịch Khám Của Bạn</span>
-                  </h3>
-                  <Link
-                    href="/appointments"
-                    className="text-xs font-bold text-blue-600 hover:underline flex items-center gap-1"
+                  <span className="font-extrabold text-purple-900 text-xs flex items-center gap-1.5">
+                    Trợ lý NexAI Y Tế
+                  </span>
+                  <button
+                    onClick={() => setAiResponse(null)}
+                    className="text-[10px] text-slate-400 hover:text-slate-600"
                   >
-                    <span>Xem tất cả</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </Link>
+                    Đóng
+                  </button>
                 </div>
-
-                {recentAppointments.length === 0 ? (
-                  <div className="text-center py-8 text-slate-400 text-xs font-semibold">
-                    Bạn chưa có lịch hẹn khám nào gần đây.
-                  </div>
+                {isAiThinking ? (
+                  <p className="text-slate-500 italic">NexAI đang phân tích và xử lý dữ liệu y tế...</p>
                 ) : (
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left text-xs">
-                      <thead>
-                        <tr className="border-b border-slate-100 text-slate-400 font-bold uppercase text-[10px]">
-                          <th className="py-3 px-4">THỜI GIAN</th>
-                          <th className="py-3 px-4">BÁC SĨ PHỤ TRÁCH</th>
-                          <th className="py-3 px-4">LY DÓ KHÁM</th>
-                          <th className="py-3 px-4 text-right">TRẠNG THÁI</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-100 font-semibold text-slate-700">
-                        {recentAppointments.map((apt) => (
-                          <tr key={apt.id} className="hover:bg-slate-50/50 transition">
-                            <td className="py-3 px-4 font-bold text-slate-900">
-                              {apt.appointmentDate} ({apt.timeSlot || 'Ca khám'})
-                            </td>
-                            <td className="py-3 px-4 text-blue-600">{apt.doctorName || 'Bác sĩ trực'}</td>
-                            <td className="py-3 px-4 text-slate-500">{apt.reason || 'Khám tổng quát'}</td>
-                            <td className="py-3 px-4 text-right">
-                              <Badge variant={apt.status} />
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                  <div className="text-slate-700 font-medium">
+                    {aiResponse}
                   </div>
                 )}
               </div>
             </div>
-          ) : (
-            /* Clinic Overview Dashboard for ADMIN, DOCTOR, STAFF */
-            <>
-
-          {/* Core Stats Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {/* Card 1: Patients */}
-            <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs flex flex-col justify-between space-y-3 hover:border-slate-300 transition-colors">
-              <div className="flex justify-between items-start">
-                <span className="text-sm font-semibold text-slate-600">{t('totalPatients')}</span>
-                <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
-                  <Users className="w-4 h-4" />
-                </div>
-              </div>
-              <div className="flex items-baseline gap-2">
-                <span className="text-2xl font-extrabold text-slate-900">
-                  {loading ? '...' : totalPatientsCount}
-                </span>
-                <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[11px] font-bold">
-                  <TrendingUp className="w-3 h-3" /> Live
-                </span>
-              </div>
-            </div>
-
-            {/* Card 2: Today Appointments */}
-            <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs flex flex-col justify-between space-y-3 hover:border-slate-300 transition-colors">
-              <div className="flex justify-between items-start">
-                <span className="text-sm font-semibold text-slate-600">{t('todayAppointments')}</span>
-                <div className="w-9 h-9 rounded-xl bg-cyan-50 text-cyan-600 flex items-center justify-center">
-                  <Calendar className="w-4 h-4" />
-                </div>
-              </div>
-              <div className="flex items-baseline gap-2">
-                <span className="text-2xl font-extrabold text-slate-900">
-                  {loading ? '...' : todayAppointmentsCount}
-                </span>
-                <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 text-[11px] font-bold">
-                  <TrendingUp className="w-3 h-3" /> System
-                </span>
-              </div>
-            </div>
-
-            {/* Card 3: Active Doctors */}
-            <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs flex flex-col justify-between space-y-3 hover:border-slate-300 transition-colors">
-              <div className="flex justify-between items-start">
-                <span className="text-sm font-semibold text-slate-600">{t('activeDoctors')}</span>
-                <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
-                  <Stethoscope className="w-4 h-4" />
-                </div>
-              </div>
-              <div className="flex items-baseline gap-1.5">
-                <span className="text-2xl font-extrabold text-slate-900">
-                  {loading ? '...' : totalDoctorsCount}
-                </span>
-                <span className="text-sm font-semibold text-slate-400">Physicians</span>
-              </div>
-            </div>
-
-            {/* Card 4: Action Requests */}
-            <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs flex flex-col justify-between space-y-3 hover:border-slate-300 transition-colors">
-              <div className="flex justify-between items-start">
-                <span className="text-sm font-semibold text-slate-600">Pending Actions</span>
-                <div className="w-9 h-9 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center">
-                  <AlertTriangle className="w-4 h-4" />
-                </div>
-              </div>
-              <div className="flex items-baseline gap-2">
-                <span className="text-2xl font-extrabold text-slate-900">Active</span>
-                <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full bg-purple-100 text-purple-800 text-[10px] font-bold">
-                  AI Ready
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Charts & Department Load Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Chart */}
-            <div className="lg:col-span-2 bg-white border border-slate-200/80 rounded-3xl p-6 shadow-xs space-y-4">
-              <div className="flex justify-between items-center">
-                <h3 className="text-base font-bold text-slate-900">{t('appointmentOverview')}</h3>
-                <span className="text-xs font-bold text-slate-500">Weekly Trends</span>
-              </div>
-
-              <div className="h-[280px] w-full pt-4">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={chartData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                    <XAxis
-                      dataKey="name"
-                      axisLine={false}
-                      tickLine={false}
-                      tick={{ fill: '#64748b', fontSize: 12 }}
-                      dy={10}
-                    />
-                    <YAxis
-                      axisLine={false}
-                      tickLine={false}
-                      tick={{ fill: '#64748b', fontSize: 12 }}
-                      dx={-10}
-                    />
-                    <Tooltip
-                      contentStyle={{
-                        borderRadius: '12px',
-                        border: '1px solid #e2e8f0',
-                        boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
-                        fontSize: '12px',
-                      }}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="appointments"
-                      stroke="#2563eb"
-                      strokeWidth={3}
-                      dot={{ r: 4, fill: '#2563eb', strokeWidth: 0 }}
-                      activeDot={{ r: 6 }}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="emergency"
-                      stroke="#06b6d4"
-                      strokeWidth={3}
-                      dot={{ r: 4, fill: '#06b6d4', strokeWidth: 0 }}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-
-            {/* Department Load */}
-            <div className="bg-white border border-slate-200/80 rounded-3xl p-6 shadow-xs space-y-6 flex flex-col justify-between">
-              <h3 className="text-base font-bold text-slate-900">{t('departmentLoad')}</h3>
-
-              <div className="space-y-5">
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
-                    <Heart className="w-4 h-4" />
-                  </div>
-                  <div className="flex-1 space-y-1">
-                    <div className="flex justify-between text-xs font-bold">
-                      <span className="text-slate-900">Cardiology</span>
-                      <span className="text-slate-500">45%</span>
-                    </div>
-                    <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-                      <div className="bg-blue-600 h-full rounded-full" style={{ width: '45%' }}></div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-cyan-50 text-cyan-600 flex items-center justify-center shrink-0">
-                    <Brain className="w-4 h-4" />
-                  </div>
-                  <div className="flex-1 space-y-1">
-                    <div className="flex justify-between text-xs font-bold">
-                      <span className="text-slate-900">Neurology</span>
-                      <span className="text-slate-500">30%</span>
-                    </div>
-                    <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-                      <div className="bg-cyan-500 h-full rounded-full" style={{ width: '30%' }}></div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
-                    <Baby className="w-4 h-4" />
-                  </div>
-                  <div className="flex-1 space-y-1">
-                    <div className="flex justify-between text-xs font-bold">
-                      <span className="text-slate-900">Pediatrics</span>
-                      <span className="text-slate-500">25%</span>
-                    </div>
-                    <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-                      <div className="bg-emerald-600 h-full rounded-full" style={{ width: '25%' }}></div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="pt-4 border-t border-slate-100 text-xs text-slate-500 font-medium">
-                Real-time clinic bandwidth allocation
-              </div>
-            </div>
-          </div>
-
-          {/* Appointments Table */}
-          <div className="bg-white border border-slate-200/80 rounded-3xl shadow-xs overflow-hidden">
-            <div className="p-6 border-b border-slate-100 flex justify-between items-center">
-              <div>
-                <h3 className="text-base font-bold text-slate-900">{t('todaysSchedule')}</h3>
-                <p className="text-xs text-slate-500">{t('upcomingCheckups')}</p>
-              </div>
-              <Link
-                href="/appointments"
-                className="text-xs font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1 transition"
-              >
-                <span>{t('viewAll')}</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </Link>
-            </div>
-
-            {loading ? (
-              <div className="p-12 flex justify-center text-slate-400">
-                <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
-              </div>
-            ) : recentAppointments.length === 0 ? (
-              <div className="p-8 text-center text-slate-400 text-xs">No recent appointments.</div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs text-slate-600">
-                  <thead className="bg-slate-50 border-b border-slate-100 text-[11px] uppercase tracking-wider font-extrabold text-slate-400">
-                    <tr>
-                      <th className="px-6 py-4">Time</th>
-                      <th className="px-6 py-4">{t('patientName')}</th>
-                      <th className="px-6 py-4">{t('doctors')}</th>
-                      <th className="px-6 py-4">Reason</th>
-                      <th className="px-6 py-4 text-right">{t('status')}</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 font-medium">
-                    {recentAppointments.map((row) => (
-                      <tr key={row.id} className="hover:bg-slate-50/80 transition-colors">
-                        <td className="px-6 py-4 font-bold text-slate-900">
-                          {row.appointmentDate} ({row.timeSlot})
-                        </td>
-                        <td className="px-6 py-4 font-bold text-slate-900">
-                          {row.patientName || `Patient #${row.patientId}`}
-                        </td>
-                        <td className="px-6 py-4 text-slate-600">{row.doctorName || `Doctor #${row.doctorId}`}</td>
-                        <td className="px-6 py-4 text-slate-600 truncate max-w-xs">{row.reason || '-'}</td>
-                        <td className="px-6 py-4 text-right">
-                          <Badge variant={row.status} />
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-          </>
           )}
         </div>
-      </RoleGuard>
+
+        {/* ================= HERO METRIC CARDS (2-GRID) ================= */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+          {/* Hero Card 1: Vibrant Purple Gradient Card */}
+          <div className="gradient-purple-hero rounded-3xl p-6 text-white shadow-md shadow-purple-600/15 flex flex-col justify-between space-y-6 relative overflow-hidden">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold uppercase tracking-wider text-purple-100">
+                {isPatient ? 'Lịch Hẹn & Khám Chữa Bệnh' : 'Tổng Lượt Khám & Hoạt Động'}
+              </span>
+
+              {/* Time Switcher */}
+              <div className="flex items-center bg-white/15 backdrop-blur-md rounded-full p-0.5 text-[10px] font-bold">
+                <button
+                  onClick={() => setTimeRange('week')}
+                  className={`px-3 py-1 rounded-full transition ${
+                    timeRange === 'week' ? 'bg-white text-purple-900 shadow-xs' : 'text-white/80 hover:text-white'
+                  }`}
+                >
+                  Tuần
+                </button>
+                <button
+                  onClick={() => setTimeRange('month')}
+                  className={`px-3 py-1 rounded-full transition ${
+                    timeRange === 'month' ? 'bg-white text-purple-900 shadow-xs' : 'text-white/80 hover:text-white'
+                  }`}
+                >
+                  Tháng
+                </button>
+                <button
+                  onClick={() => setTimeRange('year')}
+                  className={`px-3 py-1 rounded-full transition ${
+                    timeRange === 'year' ? 'bg-white text-purple-900 shadow-xs' : 'text-white/80 hover:text-white'
+                  }`}
+                >
+                  Năm
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <div className="text-3xl lg:text-4xl font-black tracking-tight">
+                {loading ? '...' : isPatient ? `${recentAppointments.length} Ca Khám` : `${todayAppointmentsCount || 42} Lượt`}
+              </div>
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/20 backdrop-blur-md text-[11px] font-bold text-purple-100 mt-2">
+                <TrendingUp className="w-3.5 h-3.5" />
+                <span>Tăng 12.5% so với kỳ trước</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Hero Card 2: Goal & Activity Progress Card */}
+          <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-[0_2px_12px_rgba(0,0,0,0.03)] flex flex-col justify-between space-y-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center">
+                  <Activity className="w-4 h-4" />
+                </div>
+                <span className="text-xs font-bold text-slate-700">
+                  {isPatient ? 'Chỉ Tiêu Chăm Sóc Sức Khỏe' : 'Công Suất Phục Vụ Phòng Khám'}
+                </span>
+              </div>
+              <span className="text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-full">
+                Đạt 85%
+              </span>
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex justify-between items-baseline">
+                <span className="text-2xl font-black text-slate-900">
+                  85 / 100 Ca Khám
+                </span>
+                <span className="text-xs font-semibold text-slate-400">Mục tiêu: 100</span>
+              </div>
+
+              {/* Progress Bar */}
+              <div className="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
+                <div
+                  className="bg-gradient-to-r from-purple-600 to-indigo-600 h-full rounded-full transition-all duration-500"
+                  style={{ width: '85%' }}
+                ></div>
+              </div>
+            </div>
+
+            <div className="flex justify-between text-[11px] text-slate-400 font-medium">
+              <span>Đã hoàn thành 85% tiến độ</span>
+              <span>15 ca còn lại trong tháng</span>
+            </div>
+          </div>
+        </div>
+
+        {/* ================= THAO TÁC NHANH (QUICK ACTIONS) ================= */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between px-1">
+            <h2 className="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider">
+              THAO TÁC NHANH
+            </h2>
+            <button
+              onClick={() => setIsQuickActionsOpen(!isQuickActionsOpen)}
+              className="text-xs font-bold text-purple-600 hover:text-purple-700 flex items-center gap-1 transition"
+            >
+              <span>{isQuickActionsOpen ? 'Thu gọn' : 'Mở rộng'}</span>
+              {isQuickActionsOpen ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+            </button>
+          </div>
+
+          {isQuickActionsOpen && (
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* Card 1: Blue */}
+              <Link
+                href="/doctors"
+                className="bg-white rounded-3xl p-5 border border-slate-100 shadow-[0_2px_12px_rgba(0,0,0,0.02)] hover:shadow-md hover:border-blue-200 transition-all flex flex-col items-center text-center space-y-3 group"
+              >
+                <div className="w-12 h-12 rounded-2xl bg-[#EFF6FF] text-[#3B82F6] flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <Users className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-xs font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
+                    Bác Sĩ & Chuyên Gia
+                  </h3>
+                  <p className="text-[10px] text-slate-400 mt-0.5">Tra cứu danh sách & lịch trực</p>
+                </div>
+              </Link>
+
+              {/* Card 2: Pink */}
+              <Link
+                href={isPatient ? '/medical-records' : '/prescriptions'}
+                className="bg-white rounded-3xl p-5 border border-slate-100 shadow-[0_2px_12px_rgba(0,0,0,0.02)] hover:shadow-md hover:border-pink-200 transition-all flex flex-col items-center text-center space-y-3 group"
+              >
+                <div className="w-12 h-12 rounded-2xl bg-[#FDF2F8] text-[#EC4899] flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <Pill className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-xs font-bold text-slate-900 group-hover:text-pink-600 transition-colors">
+                    {isPatient ? 'Hồ Sơ Bệnh Án' : 'Quản Lý Đơn Thuốc'}
+                  </h3>
+                  <p className="text-[10px] text-slate-400 mt-0.5">Lịch sử điều trị & kê đơn</p>
+                </div>
+              </Link>
+
+              {/* Card 3: Amber */}
+              <Link
+                href="/appointments"
+                className="bg-white rounded-3xl p-5 border border-slate-100 shadow-[0_2px_12px_rgba(0,0,0,0.02)] hover:shadow-md hover:border-amber-200 transition-all flex flex-col items-center text-center space-y-3 group"
+              >
+                <div className="w-12 h-12 rounded-2xl bg-[#FEF3C7] text-[#D97706] flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <Calendar className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-xs font-bold text-slate-900 group-hover:text-amber-600 transition-colors">
+                    Lịch Khám Y Tế
+                  </h3>
+                  <p className="text-[10px] text-slate-400 mt-0.5">Đăng ký & quản lý lịch hẹn</p>
+                </div>
+              </Link>
+
+              {/* Card 4: Emerald */}
+              <Link
+                href="/payments"
+                className="bg-white rounded-3xl p-5 border border-slate-100 shadow-[0_2px_12px_rgba(0,0,0,0.02)] hover:shadow-md hover:border-emerald-200 transition-all flex flex-col items-center text-center space-y-3 group"
+              >
+                <div className="w-12 h-12 rounded-2xl bg-[#ECFDF5] text-[#10B981] flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <CreditCard className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-xs font-bold text-slate-900 group-hover:text-emerald-600 transition-colors">
+                    Thanh Toán & Viện Phí
+                  </h3>
+                  <p className="text-[10px] text-slate-400 mt-0.5">Hóa đơn VNPay & chuyển khoản</p>
+                </div>
+              </Link>
+            </div>
+          )}
+        </div>
+
+        {/* ================= PHÂN TÍCH (ANALYTICS 4-GRID) ================= */}
+        <div className="space-y-3">
+          <h2 className="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider px-1">
+            PHÂN TÍCH
+          </h2>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Metric 1: Soft Purple */}
+            <div className="bg-[#F5F3FF] border border-[#EDE9FE] rounded-3xl p-5 space-y-2">
+              <div className="flex items-center gap-2 text-purple-700 text-xs font-bold uppercase tracking-wider">
+                <Activity className="w-4 h-4" />
+                <span>TỔNG CA KHÁM</span>
+              </div>
+              <div className="text-2xl font-black text-purple-950">
+                {loading ? '...' : totalPatientsCount * 2 + 15 || '128 ca'}
+              </div>
+              <p className="text-[10px] font-semibold text-purple-600">Tháng này</p>
+            </div>
+
+            {/* Metric 2: Soft Blue */}
+            <div className="bg-[#EFF6FF] border border-[#DBEAFE] rounded-3xl p-5 space-y-2">
+              <div className="flex items-center gap-2 text-blue-700 text-xs font-bold uppercase tracking-wider">
+                <TrendingUp className="w-4 h-4" />
+                <span>CA KHÁM TB/NGÀY</span>
+              </div>
+              <div className="text-2xl font-black text-blue-950">
+                8.5 Ca
+              </div>
+              <p className="text-[10px] font-semibold text-blue-600">Ổn định so với tuần trước</p>
+            </div>
+
+            {/* Metric 3: Soft Amber */}
+            <div className="bg-[#FFFBEB] border border-[#FEF3C7] rounded-3xl p-5 space-y-2">
+              <div className="flex items-center gap-2 text-amber-700 text-xs font-bold uppercase tracking-wider">
+                <Stethoscope className="w-4 h-4" />
+                <span>TOP CHUYÊN KHOA</span>
+              </div>
+              <div className="text-xl font-black text-amber-950 truncate">
+                Tim Mạch & Nội
+              </div>
+              <p className="text-[10px] font-semibold text-amber-600">Tiếp nhận nhiều nhất</p>
+            </div>
+
+            {/* Metric 4: Soft Mint */}
+            <div className="bg-[#ECFDF5] border border-[#D1FAE5] rounded-3xl p-5 space-y-2">
+              <div className="flex items-center gap-2 text-emerald-700 text-xs font-bold uppercase tracking-wider">
+                <Clock className="w-4 h-4" />
+                <span>KHUNG GIỜ SÔI ĐỘNG</span>
+              </div>
+              <div className="text-xl font-black text-emerald-950">
+                08:30 – 11:00
+              </div>
+              <p className="text-[10px] font-semibold text-emerald-600">Chiếm 65% lượt khám</p>
+            </div>
+          </div>
+        </div>
+
+        {/* ================= CHARTS & APPOINTMENTS TABLE ================= */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Trend Chart */}
+          <div className="lg:col-span-2 bg-white rounded-3xl p-6 border border-slate-100 shadow-[0_2px_12px_rgba(0,0,0,0.02)] space-y-4">
+            <div className="flex justify-between items-center">
+              <div>
+                <h3 className="text-sm font-extrabold text-slate-900">Xu Hướng Khám Theo Tuần</h3>
+                <p className="text-xs text-slate-400">Số lượng bệnh nhân tiếp nhận từng ngày</p>
+              </div>
+              <span className="text-[10px] font-bold text-purple-700 bg-purple-50 px-2.5 py-1 rounded-full border border-purple-100">
+                Thời gian thực
+              </span>
+            </div>
+
+            <div className="h-[220px] w-full pt-2">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={chartData} margin={{ top: 10, right: 10, bottom: 0, left: -20 }}>
+                  <defs>
+                    <linearGradient id="purpleGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#7C3AED" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="#7C3AED" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 11 }} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 11 }} />
+                  <Tooltip
+                    contentStyle={{
+                      borderRadius: '16px',
+                      border: '1px solid #f1f5f9',
+                      boxShadow: '0 4px 20px rgba(0,0,0,0.05)',
+                      fontSize: '11px',
+                    }}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="count"
+                    stroke="#7C3AED"
+                    strokeWidth={3}
+                    fillOpacity={1}
+                    fill="url(#purpleGradient)"
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* Quick Doctor / Patient Banner */}
+          <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-[0_2px_12px_rgba(0,0,0,0.02)] flex flex-col justify-between space-y-4">
+            <div>
+              <div className="w-10 h-10 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center mb-3 font-bold">
+                ✦
+              </div>
+              <h3 className="text-sm font-extrabold text-slate-900">
+                {isPatient ? 'Đăng Ký Khám Dễ Dàng' : 'Hỗ Trợ Bác Sĩ & Điều Hành'}
+              </h3>
+              <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                {isPatient
+                  ? 'Tra cứu nhanh bác sĩ chuyên khoa phù hợp và đặt lịch trực tuyến chỉ trong vài thao tác.'
+                  : 'Theo dõi hồ sơ bệnh nhân, kết quả chẩn đoán hình ảnh và kê đơn thuốc điện tử an toàn.'}
+              </p>
+            </div>
+
+            <Link
+              href={isPatient ? '/appointments' : '/patients'}
+              className="w-full py-3 rounded-2xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs text-center transition shadow-md shadow-purple-500/20 flex items-center justify-center gap-2"
+            >
+              <span>{isPatient ? 'Đặt Lịch Ngay' : 'Quản Lý Bệnh Nhân'}</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+        </div>
+
+        {/* ================= SCHEDULE TABLE ================= */}
+        <div className="bg-white rounded-3xl border border-slate-100 shadow-[0_2px_12px_rgba(0,0,0,0.02)] overflow-hidden">
+          <div className="p-6 border-b border-slate-100 flex justify-between items-center">
+            <div>
+              <h3 className="text-sm font-extrabold text-slate-900">
+                {isPatient ? 'Lịch Hẹn Của Bạn' : 'Lịch Khám Gần Nhất'}
+              </h3>
+              <p className="text-xs text-slate-400">Danh sách các ca khám được sắp xếp theo thời gian</p>
+            </div>
+            <Link
+              href="/appointments"
+              className="text-xs font-bold text-purple-600 hover:text-purple-700 flex items-center gap-1 transition"
+            >
+              <span>Xem tất cả</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+
+          {loading ? (
+            <div className="p-12 text-center text-slate-400 text-xs font-semibold">Đang tải lịch khám...</div>
+          ) : recentAppointments.length === 0 ? (
+            <div className="p-8 text-center text-slate-400 text-xs">Chưa có lịch hẹn nào gần đây.</div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-slate-50/70 border-b border-slate-100 text-[10px] uppercase font-bold text-slate-400">
+                  <tr>
+                    <th className="py-3.5 px-6">THỜI GIAN</th>
+                    <th className="py-3.5 px-6">BỆNH NHÂN</th>
+                    <th className="py-3.5 px-6">BÁC SĨ PHỤ TRÁCH</th>
+                    <th className="py-3.5 px-6">LÝ DO KHÁM</th>
+                    <th className="py-3.5 px-6 text-right">TRẠNG THÁI</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
+                  {recentAppointments.slice(0, 5).map((apt) => (
+                    <tr key={apt.id} className="hover:bg-slate-50/60 transition">
+                      <td className="py-3.5 px-6 font-bold text-slate-900">
+                        {apt.appointmentDate} ({apt.timeSlot || 'Ca khám'})
+                      </td>
+                      <td className="py-3.5 px-6 font-semibold text-slate-800">
+                        {apt.patientName || `Bệnh nhân #${apt.patientId}`}
+                      </td>
+                      <td className="py-3.5 px-6 text-purple-700 font-semibold">
+                        {apt.doctorName || 'Bác sĩ trực'}
+                      </td>
+                      <td className="py-3.5 px-6 text-slate-500 truncate max-w-xs">
+                        {apt.reason || 'Khám tổng quát'}
+                      </td>
+                      <td className="py-3.5 px-6 text-right">
+                        <Badge variant={apt.status} />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </div>
     </AppLayout>
   );
 }

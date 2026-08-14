@@ -25,10 +25,10 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isOwn }) 
     <div className={`flex items-end gap-2 mb-3 ${isOwn ? 'flex-row-reverse' : 'flex-row'}`}>
       {/* Avatar */}
       <div
-        className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
+        className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 shadow-xs ${
           isOwn
-            ? 'bg-blue-600 text-white'
-            : 'bg-gradient-to-br from-teal-500 to-emerald-600 text-white'
+            ? 'bg-gradient-to-tr from-purple-600 to-indigo-600 text-white'
+            : 'bg-gradient-to-tr from-indigo-500 to-purple-500 text-white'
         }`}
       >
         {(message.senderName || 'U').charAt(0).toUpperCase()}
@@ -44,10 +44,10 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isOwn }) 
 
         {/* Bubble */}
         <div
-          className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed shadow-sm ${
+          className={`px-4 py-2.5 rounded-3xl text-xs leading-relaxed shadow-xs ${
             isOwn
-              ? 'bg-blue-600 text-white rounded-br-md'
-              : 'bg-white border border-slate-200 text-slate-800 rounded-bl-md'
+              ? 'bg-purple-600 text-white rounded-br-sm'
+              : 'bg-white border border-slate-100 text-slate-800 rounded-bl-sm'
           }`}
         >
           {message.content}
@@ -58,7 +58,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isOwn }) 
           <span className="text-[10px] text-slate-400">{time}</span>
           {isOwn && (
             <CheckCheck
-              className={`w-3 h-3 ${message.isRead ? 'text-blue-400' : 'text-slate-300'}`}
+              className={`w-3 h-3 ${message.isRead ? 'text-purple-300' : 'text-slate-300'}`}
             />
           )}
         </div>
