@@ -1,29 +1,32 @@
-'use client';
+"use client";
 
-import React, { useState, useRef } from 'react';
-import { Send } from 'lucide-react';
+import React, { useState, useRef } from "react";
+import { Send } from "lucide-react";
 
 interface MessageInputProps {
   onSend: (content: string) => void;
   disabled?: boolean;
 }
 
-export const MessageInput: React.FC<MessageInputProps> = ({ onSend, disabled }) => {
-  const [text, setText] = useState('');
+export const MessageInput: React.FC<MessageInputProps> = ({
+  onSend,
+  disabled,
+}) => {
+  const [text, setText] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const handleSend = () => {
     const trimmed = text.trim();
     if (!trimmed || disabled) return;
     onSend(trimmed);
-    setText('');
+    setText("");
     if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = "auto";
     }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSend();
     }
@@ -34,8 +37,8 @@ export const MessageInput: React.FC<MessageInputProps> = ({ onSend, disabled }) 
     // Auto resize
     const ta = textareaRef.current;
     if (ta) {
-      ta.style.height = 'auto';
-      ta.style.height = Math.min(ta.scrollHeight, 120) + 'px';
+      ta.style.height = "auto";
+      ta.style.height = Math.min(ta.scrollHeight, 120) + "px";
     }
   };
 

@@ -25,6 +25,12 @@ interface UseChatSocketOptions {
 export const useChatSocket = ({ roomId, onMessage }: UseChatSocketOptions) => {
   const [connected, setConnected] = useState(false);
   const clientRef = useRef<Client | null>(null);
+  // Lưu callback vào ref để tránh useEffect re-run mỗi khi onMessage thay đổi reference
+  const onMessageRef = useRef(onMessage);
+
+  useEffect(() => {
+    onMessageRef.current = onMessage;
+  }, [onMessage]);
 
   const sendMessage = useCallback((content: string) => {
     if (!clientRef.current?.connected || !roomId) return;
@@ -54,7 +60,8 @@ export const useChatSocket = ({ roomId, onMessage }: UseChatSocketOptions) => {
         client.subscribe(`/topic/chat.${roomId}`, (frame: IMessage) => {
           try {
             const msg: ChatMessage = JSON.parse(frame.body);
-            onMessage?.(msg);
+            // Dùng ref thay vì closure để luôn gọi callback mới nhất
+            onMessageRef.current?.(msg);
           } catch {
             console.error('[WS] Không parse được message:', frame.body);
           }
@@ -76,7 +83,8 @@ export const useChatSocket = ({ roomId, onMessage }: UseChatSocketOptions) => {
       clientRef.current = null;
       setConnected(false);
     };
-  }, [roomId, onMessage]);
+  }, [roomId]); // ← Chỉ reconnect khi đổi roomId, không reconnect khi onMessage đổi reference
 
   return { connected, sendMessage };
 };
+
