@@ -1,18 +1,16 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { ChatRoom, Doctor } from '@/types/api';
 import { chatService } from '@/services/chatService';
 import { doctorService } from '@/services/doctorService';
 import { patientService } from '@/services/patientService';
-import { useAuthStore } from '@/store/useAuthStore';
 import { ChatRoomList } from '@/components/chat/ChatRoomList';
 import { ChatWindow } from '@/components/chat/ChatWindow';
-import { MessageSquare, Search, Plus, X, UserCheck, Stethoscope, Loader2 } from 'lucide-react';
+import { MessageSquare, Search, Plus, X, Stethoscope, Loader2 } from 'lucide-react';
 
 export default function ChatPage() {
-  const { user } = useAuthStore();
   const [rooms, setRooms] = useState<ChatRoom[]>([]);
   const [filteredRooms, setFilteredRooms] = useState<ChatRoom[]>([]);
   const [selectedRoom, setSelectedRoom] = useState<ChatRoom | null>(null);
@@ -26,11 +24,7 @@ export default function ChatPage() {
   const [creatingRoom, setCreatingRoom] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadRooms();
-  }, []);
-
-  const loadRooms = () => {
+  const loadRooms = useCallback(() => {
     chatService
       .getMyRooms()
       .then((data) => {
@@ -42,7 +36,11 @@ export default function ChatPage() {
       })
       .catch(console.error)
       .finally(() => setLoading(false));
-  };
+  }, [selectedRoom]);
+
+  useEffect(() => {
+    loadRooms();
+  }, [loadRooms]);
 
   useEffect(() => {
     if (!search.trim()) {
