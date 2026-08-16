@@ -9,7 +9,7 @@ import { formatCurrency } from '@/lib/format';
 import { doctorService, DoctorScheduleCreateParams } from '@/services/doctorService';
 import { useAuthStore } from '@/store/useAuthStore';
 import { Doctor, DoctorSchedule, DoctorReview } from '@/types/api';
-import { UserCheck, Clock, ArrowLeft, Plus, Star, Trash2, Loader2, CalendarPlus, Phone, Mail, Award, CheckCircle2 } from 'lucide-react';
+import { UserCheck, Clock, ArrowLeft, Plus, Star, Trash2, Loader2, CalendarPlus, Phone, Mail, Award, CheckCircle2, MessageSquare } from 'lucide-react';
 
 export default function DoctorDetailPage() {
   const params = useParams();
@@ -138,22 +138,31 @@ export default function DoctorDetailPage() {
                 </div>
               </div>
 
-              <div className="flex items-center gap-4">
-                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 text-right">
-                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Phí tư vấn</p>
-                  <p className="text-xl font-extrabold text-purple-600">{formatCurrency(doctor.consultationFee)}</p>
-                </div>
+                <div className="flex flex-wrap items-center gap-3">
+                  <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 text-right">
+                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Phí tư vấn</p>
+                    <p className="text-xl font-extrabold text-purple-600">{formatCurrency(doctor.consultationFee)}</p>
+                  </div>
 
-                {isPatient && (
-                  <Link
-                    href={`/appointments?doctorId=${doctor.id}`}
-                    className="px-6 py-4 rounded-2xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs shadow-md shadow-purple-500/20 hover:scale-[1.02] transition flex items-center gap-2"
-                  >
-                    <CalendarPlus className="w-4 h-4" />
-                    <span>Đặt Lịch Khám Ngay</span>
-                  </Link>
-                )}
-              </div>
+                  {isPatient && (
+                    <div className="flex items-center gap-2">
+                      <Link
+                        href={`/appointments?doctorId=${doctor.id}`}
+                        className="px-5 py-4 rounded-2xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs shadow-md shadow-purple-500/20 hover:scale-[1.02] transition flex items-center gap-2"
+                      >
+                        <CalendarPlus className="w-4 h-4" />
+                        <span>Đặt Lịch Khám</span>
+                      </Link>
+                      <Link
+                        href="/chat"
+                        className="px-5 py-4 rounded-2xl bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold text-xs border border-purple-200/80 hover:scale-[1.02] transition flex items-center gap-2"
+                      >
+                        <MessageSquare className="w-4 h-4" />
+                        <span>Nhắn Tin</span>
+                      </Link>
+                    </div>
+                  )}
+                </div>
             </div>
 
             {/* Tabs Container */}

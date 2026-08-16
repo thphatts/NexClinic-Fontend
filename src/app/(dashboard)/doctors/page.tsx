@@ -9,7 +9,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import { formatCurrency } from '@/lib/format';
 import { doctorService, DoctorCreateParams } from '@/services/doctorService';
 import { useAuthStore } from '@/store/useAuthStore';
-import { Search, Plus, Phone, Award, Eye, Trash2, Loader2, CalendarPlus, Stethoscope, Star } from 'lucide-react';
+import { Search, Plus, Phone, Award, Eye, Trash2, Loader2, CalendarPlus, Stethoscope, Star, MessageSquare } from 'lucide-react';
 import { Doctor } from '@/types/api';
 
 export default function DoctorsPage() {
@@ -210,13 +210,22 @@ export default function DoctorsPage() {
                   </div>
 
                   {isPatient && (
-                    <Link
-                      href={`/appointments?doctorId=${doc.id}`}
-                      className="w-full py-2 rounded-xl bg-purple-50 hover:bg-purple-600 text-purple-700 hover:text-white font-bold text-xs transition flex items-center justify-center gap-1.5 border border-purple-200/60 hover:border-transparent"
-                    >
-                      <CalendarPlus className="w-3.5 h-3.5" />
-                      <span>Đặt Lịch Với Bác Sĩ</span>
-                    </Link>
+                    <div className="grid grid-cols-2 gap-2">
+                      <Link
+                        href={`/appointments?doctorId=${doc.id}`}
+                        className="py-2 rounded-xl bg-purple-50 hover:bg-purple-600 text-purple-700 hover:text-white font-bold text-xs transition flex items-center justify-center gap-1.5 border border-purple-200/60 hover:border-transparent shadow-xs"
+                      >
+                        <CalendarPlus className="w-3.5 h-3.5" />
+                        <span>Đặt Khám</span>
+                      </Link>
+                      <Link
+                        href="/chat"
+                        className="py-2 rounded-xl bg-slate-50 hover:bg-purple-50 text-slate-700 hover:text-purple-700 font-bold text-xs transition flex items-center justify-center gap-1.5 border border-slate-200/60 shadow-xs"
+                      >
+                        <MessageSquare className="w-3.5 h-3.5 text-purple-600" />
+                        <span>Nhắn Tin</span>
+                      </Link>
+                    </div>
                   )}
                 </div>
               </div>
