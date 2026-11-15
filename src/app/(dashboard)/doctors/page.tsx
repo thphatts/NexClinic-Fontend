@@ -11,7 +11,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import { formatCurrency } from '@/lib/format';
 import { doctorService, DoctorCreateParams } from '@/services/doctorService';
 import { useAuthStore } from '@/store/useAuthStore';
-import { Trash2, Loader2 } from 'lucide-react';
+import { Pencil, Trash2, Loader2 } from 'lucide-react';
 import { Doctor } from '@/types/api';
 
 export default function DoctorsPage() {
@@ -31,6 +31,7 @@ export default function DoctorsPage() {
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingDoctorId, setEditingDoctorId] = useState<number | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState<DoctorCreateParams>({
     fullName: '',
@@ -73,8 +74,13 @@ export default function DoctorsPage() {
     e.preventDefault();
     setSubmitting(true);
     try {
-      await doctorService.createDoctor(formData);
+      if (editingDoctorId !== null) {
+        await doctorService.updateDoctor(editingDoctorId, formData);
+      } else {
+        await doctorService.createDoctor(formData);
+      }
       setIsModalOpen(false);
+      setEditingDoctorId(null);
       setFormData({
         fullName: '',
         specialization: '',
@@ -91,6 +97,20 @@ export default function DoctorsPage() {
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const handleEdit = (doctor: Doctor) => {
+    setEditingDoctorId(doctor.id);
+    setFormData({
+      fullName: doctor.fullName,
+      specialization: doctor.specialization || '',
+      degree: doctor.degree || '',
+      phone: doctor.phone || '',
+      email: doctor.email || '',
+      experienceYears: doctor.experienceYears || 0,
+      consultationFee: doctor.consultationFee || 0,
+    });
+    setIsModalOpen(true);
   };
 
   const handleDelete = async (id: number) => {
@@ -160,13 +180,23 @@ export default function DoctorsPage() {
                       {doc.fullName.charAt(0)}
                     </div>
                     {isAdmin && (
-                      <button
-                        onClick={() => handleDelete(doc.id)}
-                        className="p-1.5 rounded-xl text-slate-300 hover:text-rose-600 hover:bg-rose-50 transition"
-                        title="Xóa hồ sơ bác sĩ"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => handleEdit(doc)}
+                          className="p-1.5 rounded-xl text-slate-400 hover:text-purple-700 hover:bg-purple-50 transition"
+                          title="Chỉnh sửa hồ sơ bác sĩ"
+                          aria-label={`Chỉnh sửa ${doc.fullName}`}
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(doc.id)}
+                          className="p-1.5 rounded-xl text-slate-300 hover:text-rose-600 hover:bg-rose-50 transition"
+                          title="Xóa hồ sơ bác sĩ"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     )}
                   </div>
 
@@ -248,13 +278,13 @@ export default function DoctorsPage() {
         />
       </div>
 
-      {/* Modal Create Doctor (Admin only) */}
+      {/* Modal Create/Edit Doctor (Admin only) */}
       {isAdmin && (
         <Modal
           isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          title={t('addNewDoctor') || 'Thêm Bác Sĩ Mới'}
-          subtitle="Nhập thông tin chuyên môn để tạo hồ sơ bác sĩ trên hệ thống."
+          onClose={() => { setIsModalOpen(false); setEditingDoctorId(null); }}
+          title={editingDoctorId !== null ? 'Chỉnh sửa hồ sơ bác sĩ' : t('addNewDoctor') || 'Thêm Bác Sĩ Mới'}
+          subtitle={editingDoctorId !== null ? 'Cập nhật thông tin và phí tư vấn của bác sĩ.' : 'Nhập thông tin chuyên môn để tạo hồ sơ bác sĩ trên hệ thống.'}
         >
           <form onSubmit={handleSubmit} className="space-y-4 text-xs">
             <div>

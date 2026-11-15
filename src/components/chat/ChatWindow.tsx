@@ -88,8 +88,8 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ room }) => {
     );
   }
 
-  const otherName =
-    user?.role === 'ROLE_PATIENT' ? room.doctorName : room.patientName;
+  const isAdmin = user?.role === 'ROLE_ADMIN';
+  const otherName = user?.role === 'ROLE_PATIENT' ? room.doctorName : room.patientName;
 
   return (
     <div className="flex-1 flex flex-col min-h-0">
@@ -97,13 +97,19 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ room }) => {
       <div className="h-16 px-5 border-b border-slate-100 flex items-center justify-between bg-white shrink-0">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-gradient-to-br from-teal-500 to-emerald-600 text-white font-bold flex items-center justify-center text-sm">
-            {otherName.charAt(0).toUpperCase()}
+            {(isAdmin ? room.patientName : otherName).charAt(0).toUpperCase()}
           </div>
           <div>
-            <p className="text-sm font-bold text-slate-800">{otherName}</p>
-            <p className="text-xs text-slate-400">
-              {room.status === 'ACTIVE' ? 'Đang hoạt động' : 'Đã đóng'}
-            </p>
+            {isAdmin ? <>
+              <p className="text-xs font-bold text-slate-800">Bệnh nhân: {room.patientName}</p>
+              <p className="text-xs text-slate-600">Bác sĩ: {room.doctorName}</p>
+              <p className="text-[10px] text-slate-400">{room.status === 'ACTIVE' ? 'Đang hoạt động' : 'Đã đóng'}</p>
+            </> : <>
+              <p className="text-sm font-bold text-slate-800">{otherName}</p>
+              <p className="text-xs text-slate-400">
+                {room.status === 'ACTIVE' ? 'Đang hoạt động' : 'Đã đóng'}
+              </p>
+            </>}
           </div>
         </div>
         {/* Connection indicator */}

@@ -6,6 +6,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Badge } from '@/components/ui/Badge';
 import { BookingDialog } from '@/components/appointments/BookingDialog';
+import { Modal } from '@/components/ui/Modal';
 import { Pagination } from '@/components/ui/Pagination';
 import { RoleGuard } from '@/components/auth/RoleGuard';
 import { useLanguage } from '@/context/LanguageContext';
@@ -16,15 +17,17 @@ import { doctorService } from '@/services/doctorService';
 import { paymentService } from '@/services/paymentService';
 import { Appointment, AppointmentStatus } from '@/types/api';
 import { useAuthStore } from '@/store/useAuthStore';
-import { Trash2, Loader2 } from 'lucide-react';
+import { Loader2, Trash2 } from 'lucide-react';
 
 export default function AppointmentsPage() {
   const { notify, confirmAction } = useFeedback();
   const { t } = useLanguage();
   const { user } = useAuthStore();
+  const isDoctor = user?.role === 'ROLE_DOCTOR';
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [updatingAppointmentIds, setUpdatingAppointmentIds] = useState<number[]>([]);
 
   const isPatient = user?.role === 'ROLE_PATIENT';
   const [currentDoctorId, setCurrentDoctorId] = useState<number | null>(null);
@@ -46,10 +49,13 @@ export default function AppointmentsPage() {
   const [totalElements, setTotalElements] = useState(0);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [statusAppointment, setStatusAppointment] = useState<Appointment | null>(null);
+  const [statusDraft, setStatusDraft] = useState<AppointmentStatus>('PENDING');
   const [notice, setNotice] = useState('');
 
   useEffect(() => {
-    if (new URLSearchParams(window.location.search).get('book') === '1' && user?.role !== 'ROLE_ADMIN') setIsModalOpen(true);
+    const canBookAppointment = user?.role === 'ROLE_PATIENT' || user?.role === 'ROLE_STAFF';
+    if (new URLSearchParams(window.location.search).get('book') === '1' && canBookAppointment) setIsModalOpen(true);
   }, [user?.role]);
 
   const fetchAppointments = useCallback(async () => {
@@ -58,6 +64,7 @@ export default function AppointmentsPage() {
     try {
       const profile = isPatient ? await patientService.getMyPatientProfile() : null;
       const res = await appointmentService.filterAppointments({
+        doctorId: isDoctor ? currentDoctorId ?? undefined : undefined,
         patientId: profile?.id,
         page,
         size: pageSize,
@@ -73,19 +80,26 @@ export default function AppointmentsPage() {
     } finally {
       setLoading(false);
     }
-  }, [page, pageSize, statusFilter, isPatient]);
+  }, [page, pageSize, statusFilter, isPatient, currentDoctorId, isDoctor]);
 
   useEffect(() => {
     fetchAppointments();
   }, [fetchAppointments]);
 
   const handleStatusChange = async (id: number, newStatus: AppointmentStatus) => {
+    if (updatingAppointmentIds.includes(id)) return;
+    setUpdatingAppointmentIds((ids) => [...ids, id]);
     try {
-      await appointmentService.updateAppointmentStatus(id, newStatus);
-      fetchAppointments();
+      const updatedAppointment = await appointmentService.updateAppointmentStatus(id, newStatus);
+      setAppointments((items) => items.map((appointment) => (
+        appointment.id === id ? { ...appointment, ...updatedAppointment } : appointment
+      )));
+      setStatusAppointment(null);
     } catch (err: unknown) {
       const errorObj = err as { response?: { data?: { message?: string } }; message?: string };
-      notify(errorObj.response?.data?.message || 'Không cập nhật được trạng thái');
+      notify(errorObj.response?.data?.message || errorObj.message || 'Không cập nhật được trạng thái lịch hẹn. Vui lòng thử lại.');
+    } finally {
+      setUpdatingAppointmentIds((ids) => ids.filter((appointmentId) => appointmentId !== id));
     }
   };
 
@@ -107,7 +121,7 @@ export default function AppointmentsPage() {
         paymentMethod: 'VNPAY',
       });
       if (payment.paymentUrl) {
-        window.location.href = payment.paymentUrl;
+        window.location.assign(payment.paymentUrl);
       } else {
         notify('Đã tạo yêu cầu thanh toán.');
       }
@@ -142,7 +156,7 @@ export default function AppointmentsPage() {
               </div>
             </div>
 
-            {user?.role !== 'ROLE_ADMIN' && <button
+            {(user?.role === 'ROLE_PATIENT' || user?.role === 'ROLE_STAFF') && <button
               onClick={() => setIsModalOpen(true)}
               className="w-full md:w-auto px-5 py-2.5 rounded-xl bg-blue-600 text-white font-bold text-xs hover:bg-blue-700 transition shadow-sm flex items-center justify-center gap-2"
             >
@@ -180,7 +194,7 @@ export default function AppointmentsPage() {
                       <th className="px-6 py-4">{t('reasonForVisit')}</th>
                       <th className="px-6 py-4">{t('fee')}</th>
                       <th className="px-6 py-4">{t('status')}</th>
-                      <th className="px-6 py-4 text-right">Thao tác</th>
+                      {user?.role === 'ROLE_ADMIN' && <th className="px-6 py-4 text-right">Thao tác</th>}
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 font-medium">
@@ -204,32 +218,20 @@ export default function AppointmentsPage() {
                           {apt.doctorName || `Bác sĩ #${apt.doctorId}`}
                         </td>
                         <td className="px-6 py-4 text-slate-600 max-w-xs truncate">{apt.reason || '-'}</td>
-                        <td className="px-6 py-4 font-extrabold text-slate-900">{formatCurrency(apt.amount)}</td>
+                        <td className="px-6 py-4 font-extrabold text-slate-900">{formatCurrency(apt.consultationFee)}</td>
                         <td className="px-6 py-4">
-                          <Badge variant={apt.status} />
-                        </td>
-                        <td className="px-6 py-4 text-right space-x-2">
-                          {currentDoctorId === apt.doctorId && <select
-                            aria-label={`Trạng thái lịch hẹn ${apt.id}`}
-                            value={apt.status}
-                            onChange={(e) => handleStatusChange(apt.id, e.target.value as AppointmentStatus)}
-                            className="px-2 py-1 rounded-lg border border-slate-200 text-xs font-semibold text-slate-700 bg-white"
-                          >
-                            <option value="PENDING">Chờ xác nhận</option>
-                            <option value="CONFIRMED">Đã xác nhận</option>
-                            <option value="COMPLETED">Hoàn tất</option>
-                            <option value="CANCELLED">Đã hủy</option>
-                          </select>}
-
-                          <button
+                          {currentDoctorId === apt.doctorId ? (
+                            <button type="button" onClick={() => { setStatusAppointment(apt); setStatusDraft(apt.status); }} aria-label={`Cập nhật trạng thái lịch hẹn ${apt.id}`}>
+                              <Badge variant={apt.status} />
+                            </button>
+                          ) : <Badge variant={apt.status} />}
+                          {isPatient && apt.status === 'CONFIRMED' && <button
                             onClick={() => handlePayVNPay(apt.id)}
-                            className="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 font-bold text-[11px] inline-flex items-center gap-1"
+                            className="ml-2 rounded-lg bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-700 hover:bg-emerald-100"
                             title="Thanh toán qua VNPay"
-                          >
-
-                            <span>VNPay</span>
-                          </button>
-
+                          >VNPay</button>}
+                        </td>
+                        {user?.role === 'ROLE_ADMIN' && <td className="px-6 py-4 text-right space-x-2">
                           <button
                             onClick={() => handleCancel(apt.id)}
                             className="p-1 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50"
@@ -237,7 +239,7 @@ export default function AppointmentsPage() {
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
-                        </td>
+                        </td>}
                       </tr>
                     ))}
                   </tbody>
@@ -259,6 +261,37 @@ export default function AppointmentsPage() {
             }}
           />
         </div>
+
+        <Modal
+          isOpen={!!statusAppointment}
+          onClose={() => { if (!statusAppointment || !updatingAppointmentIds.includes(statusAppointment.id)) setStatusAppointment(null); }}
+          title="Cập nhật trạng thái lịch hẹn"
+          subtitle={statusAppointment ? `Lịch hẹn #${statusAppointment.id} · ${statusAppointment.appointmentDate} · ${statusAppointment.timeSlot}` : undefined}
+          maxWidth="sm"
+        >
+          {statusAppointment && <div className="space-y-5">
+            <label className="block text-sm font-medium text-slate-700" htmlFor="appointment-status">Trạng thái</label>
+            <select
+              id="appointment-status"
+              value={statusDraft}
+              disabled={updatingAppointmentIds.includes(statusAppointment.id)}
+              onChange={(event) => setStatusDraft(event.target.value as AppointmentStatus)}
+              className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-3 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-teal-700 disabled:opacity-60"
+            >
+              <option value="PENDING">Chờ xác nhận</option>
+              <option value="CONFIRMED">Đã xác nhận</option>
+              <option value="COMPLETED">Hoàn tất</option>
+              <option value="CANCELLED">Đã hủy</option>
+            </select>
+            <div className="flex justify-end gap-3">
+              <button type="button" onClick={() => setStatusAppointment(null)} disabled={updatingAppointmentIds.includes(statusAppointment.id)} className="btn-secondary">Đóng</button>
+              <button type="button" onClick={() => void handleStatusChange(statusAppointment.id, statusDraft)} disabled={statusDraft === statusAppointment.status || updatingAppointmentIds.includes(statusAppointment.id)} className="btn-primary inline-flex items-center gap-2 disabled:cursor-not-allowed disabled:opacity-60">
+                {updatingAppointmentIds.includes(statusAppointment.id) && <Loader2 className="h-4 w-4 animate-spin" />}
+                Lưu trạng thái
+              </button>
+            </div>
+          </div>}
+        </Modal>
 
         {isModalOpen && <BookingDialog onClose={() => setIsModalOpen(false)} onSuccess={() => { setIsModalOpen(false); setNotice('Đã gửi yêu cầu đặt lịch. Bạn có thể theo dõi trạng thái tại đây.'); void fetchAppointments(); }} />}
       </RoleGuard>

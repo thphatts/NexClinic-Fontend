@@ -115,7 +115,8 @@ export interface Appointment {
   status: AppointmentStatus;
   reason?: string;
   notes?: string;
-  amount: number;
+  consultationFee: number;
+  amount?: number;
   createdAt?: string;
   updatedAt?: string;
 }

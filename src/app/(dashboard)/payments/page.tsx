@@ -178,7 +178,7 @@ export default function PaymentsPage() {
                         <td className="px-6 py-4 text-blue-600 font-semibold">
                           {apt.doctorName || `Bác sĩ #${apt.doctorId}`}
                         </td>
-                        <td className="px-6 py-4 font-extrabold text-slate-900">{formatCurrency(apt.amount)}</td>
+                        <td className="px-6 py-4 font-extrabold text-slate-900">{formatCurrency(apt.consultationFee)}</td>
                         <td className="px-6 py-4">
                           <Badge variant={apt.status} />
                         </td>

@@ -20,8 +20,11 @@ export const ChatRoomList: React.FC<ChatRoomListProps> = ({
 }) => {
   const { user } = useAuthStore();
 
-  const getDisplayName = (room: ChatRoom) =>
-    user?.role === 'ROLE_PATIENT' ? room.doctorName : room.patientName;
+  const getDisplayName = (room: ChatRoom) => {
+    if (user?.role === 'ROLE_PATIENT') return room.doctorName;
+    if (user?.role === 'ROLE_ADMIN') return `${room.patientName} ↔ ${room.doctorName}`;
+    return room.patientName;
+  };
 
   const getInitial = (name: string) => name?.charAt(0).toUpperCase() ?? '?';
 

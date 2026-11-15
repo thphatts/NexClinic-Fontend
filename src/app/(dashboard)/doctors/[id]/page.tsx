@@ -17,7 +17,7 @@ export default function DoctorDetailPage() {
   const { notify, confirmAction } = useFeedback();
   const params = useParams();
   const doctorId = Number(params?.id);
-  const { hasRole } = useAuthStore();
+  const { hasRole, user } = useAuthStore();
 
   const [doctor, setDoctor] = useState<Doctor | null>(null);
   const [schedules, setSchedules] = useState<DoctorSchedule[]>([]);
@@ -36,7 +36,9 @@ export default function DoctorDetailPage() {
     slotDurationMinutes: 30,
   });
 
-  const isAdminOrDoctor = hasRole(['ROLE_ADMIN', 'ROLE_DOCTOR']);
+  const canManageSchedules = hasRole(['ROLE_ADMIN']) || (
+    hasRole(['ROLE_DOCTOR']) && !!doctor?.userId && String(doctor.userId) === String(user?.id)
+  );
   const isPatient = hasRole(['ROLE_PATIENT']);
 
   const fetchData = useCallback(async () => {
@@ -66,6 +68,7 @@ export default function DoctorDetailPage() {
 
   const handleCreateSchedule = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!canManageSchedules) return;
     setSubmittingSchedule(true);
     try {
       await doctorService.createSchedule(doctorId, scheduleData);
@@ -80,6 +83,7 @@ export default function DoctorDetailPage() {
   };
 
   const handleDeleteSchedule = async (scheduleId: number) => {
+    if (!canManageSchedules) return;
     if (!await confirmAction('Bạn có chắc muốn xóa ca trực này?')) return;
     try {
       await doctorService.deleteSchedule(doctorId, scheduleId);
@@ -214,7 +218,7 @@ export default function DoctorDetailPage() {
                         <h3 className="text-sm font-bold text-slate-900">Lịch Khám & Khung Giờ Làm Việc</h3>
                         <p className="text-xs text-slate-500">Các ca trực sẵn sàng nhận đăng ký khám</p>
                       </div>
-                      {isAdminOrDoctor && (
+                      {canManageSchedules && (
                         <button
                           onClick={() => setIsScheduleModalOpen(true)}
                           className="px-4 py-2 rounded-2xl bg-purple-600 text-white font-bold text-xs hover:bg-purple-700 transition flex items-center gap-1.5 shadow-sm"
@@ -254,7 +258,7 @@ export default function DoctorDetailPage() {
                                         {s.slotDurationMinutes} phút / ca
                                       </span>
                                     </div>
-                                    {isAdminOrDoctor && (
+                                    {canManageSchedules && (
                                       <button
                                         onClick={() => handleDeleteSchedule(s.id)}
                                         className="text-slate-300 hover:text-rose-600 p-1"
@@ -326,7 +330,7 @@ export default function DoctorDetailPage() {
       </div>
 
       {/* Modal Add Schedule */}
-      {isAdminOrDoctor && (
+      {canManageSchedules && (
         <Modal
           isOpen={isScheduleModalOpen}
           onClose={() => setIsScheduleModalOpen(false)}
