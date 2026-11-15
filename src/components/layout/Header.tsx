@@ -1,107 +1,40 @@
 'use client';
 
-import React from 'react';
-import { Search, Bell, Calendar as CalendarIcon, Globe, LogOut } from 'lucide-react';
-import { useLanguage } from '@/context/LanguageContext';
+import Link from 'next/link';
 import { useAuthStore } from '@/store/useAuthStore';
 import { authService } from '@/services/authService';
+import { roleLabels } from '@/lib/navigation';
+import { useState } from 'react';
+import { AppointmentUpdates } from '@/components/appointments/AppointmentUpdates';
+import { useRouter } from 'next/navigation';
 
-interface HeaderProps {
-  title?: string;
-  onMobileMenuToggle?: () => void;
-}
+interface HeaderProps { title?: string; onMobileMenuToggle?: () => void; mobileOpen?: boolean }
 
-export const Header: React.FC<HeaderProps> = ({ title }) => {
-  const { language, setLanguage, t } = useLanguage();
+export function Header({ title, onMobileMenuToggle, mobileOpen }: HeaderProps) {
   const { user, logout } = useAuthStore();
-
+  const [leaving, setLeaving] = useState(false);
+  const [updatesOpen, setUpdatesOpen] = useState(false);
+  const router = useRouter();
   const handleLogout = async () => {
-    try {
-      await authService.logout();
-    } catch {
-      // ignore
-    } finally {
-      logout();
-      window.location.href = '/login';
-    }
+    setLeaving(true);
+    try { await authService.logout(); } finally { logout(); router.replace('/login'); }
   };
-
-  const currentDate = new Date().toLocaleDateString(language === 'vi' ? 'vi-VN' : 'en-US', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  });
-
-  const displayRole = user?.role ? user.role.replace('ROLE_', '') : 'GUEST';
-
-  return (
-    <header className="h-16 bg-white/80 backdrop-blur-md border-b border-slate-100/90 sticky top-0 z-30 px-6 flex items-center justify-between">
-      {/* Page Title or Search */}
-      <div className="flex items-center gap-4">
-        {title ? (
-          <h2 className="text-base font-extrabold text-slate-900 tracking-tight">{title}</h2>
-        ) : (
-          <div className="relative w-64 md:w-80">
-            <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-            <input
-              type="text"
-              placeholder={t('searchPlaceholder') || 'Tìm kiếm nhanh...'}
-              className="w-full pl-9 pr-4 py-2 rounded-2xl bg-slate-50 border border-slate-200/60 text-xs text-slate-900 placeholder-slate-400 focus:bg-white focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 focus:outline-none transition-all"
-            />
-          </div>
-        )}
+  return <header className="clinic-header">
+    <div className="flex min-w-0 items-center gap-3">
+      <button onClick={onMobileMenuToggle} aria-controls="portal-navigation" aria-expanded={mobileOpen} className="btn-secondary md:hidden">Menu</button>
+      <span className="hidden text-xs text-slate-400 sm:inline">Không gian của bạn</span>
+      <span className="hidden text-slate-300 sm:inline" aria-hidden="true">/</span>
+      <span className="truncate text-xs font-medium text-slate-700">{title || 'NexClinic'}</span>
+    </div>
+    <div className="flex items-center gap-3 sm:gap-5">
+      {user?.role === 'ROLE_PATIENT' && <button onClick={() => setUpdatesOpen(true)} className="text-xs text-teal-800">Cập nhật</button>}
+      <Link href="/appointments" className="hidden text-xs text-slate-500 hover:text-teal-800 lg:inline">Xem lịch hẹn</Link>
+      <div className="flex items-center gap-2.5">
+        <div className="avatar-initial">{(user?.name || user?.username || 'N').charAt(0).toUpperCase()}</div>
+        <div className="hidden sm:block"><p className="max-w-36 truncate text-xs font-semibold">{user?.name || user?.username || 'Tài khoản'}</p><p className="mt-1 text-[10px] text-slate-500">{user?.role && roleLabels[user.role]}</p></div>
       </div>
-
-      {/* Right Header Controls */}
-      <div className="flex items-center gap-3">
-        {/* Date Display */}
-        <div className="hidden sm:flex items-center gap-2 text-xs font-medium text-slate-500 bg-slate-50 px-3 py-1.5 rounded-2xl border border-slate-100">
-          <CalendarIcon className="w-3.5 h-3.5 text-purple-500" />
-          <span>{currentDate}</span>
-        </div>
-
-        {/* Quick Language Switcher Button */}
-        <button
-          onClick={() => setLanguage(language === 'en' ? 'vi' : 'en')}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-2xl bg-slate-50 hover:bg-purple-50 text-slate-700 hover:text-purple-700 transition text-xs font-bold border border-slate-100"
-          title="Switch Language / Đổi Ngôn Ngữ"
-        >
-          <Globe className="w-3.5 h-3.5 text-purple-600" />
-          <span>{language === 'en' ? 'EN' : 'VI'}</span>
-        </button>
-
-        {/* Notifications */}
-        <button className="relative p-2 rounded-2xl text-slate-500 hover:text-purple-700 hover:bg-purple-50 border border-slate-100 transition-colors">
-          <Bell className="w-4 h-4" />
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-rose-500 ring-2 ring-white"></span>
-        </button>
-
-        <div className="w-px h-6 bg-slate-100 mx-1"></div>
-
-        {/* User Profile Menu */}
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-purple-600 to-indigo-500 text-white flex items-center justify-center font-bold text-xs shadow-xs">
-            {user?.name?.charAt(0) || user?.username?.charAt(0)?.toUpperCase() || 'U'}
-          </div>
-          <div className="hidden md:flex flex-col">
-            <span className="text-xs font-bold text-slate-900 leading-tight">
-              {user?.name || user?.username || 'User'}
-            </span>
-            <span className="text-[9px] font-bold text-purple-600 uppercase tracking-wide">
-              {displayRole}
-            </span>
-          </div>
-
-          <button
-            onClick={handleLogout}
-            className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition ml-1"
-            title={t('logout') || 'Đăng xuất'}
-          >
-            <LogOut className="w-3.5 h-3.5" />
-          </button>
-        </div>
-      </div>
-    </header>
-  );
-};
+      <button disabled={leaving} onClick={() => void handleLogout().catch(() => {})} className="text-xs text-slate-500 hover:text-rose-700 disabled:opacity-50">{leaving ? 'Đang thoát…' : 'Đăng xuất'}</button>
+    </div>
+    {updatesOpen && <AppointmentUpdates onClose={() => setUpdatesOpen(false)} />}
+  </header>;
+}

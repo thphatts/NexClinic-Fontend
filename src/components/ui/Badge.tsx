@@ -20,6 +20,7 @@ interface BadgeProps {
 }
 
 export const Badge: React.FC<BadgeProps> = ({ variant, label, className = '' }) => {
+  const labels: Record<string, string> = { PENDING: 'Chờ xác nhận', CONFIRMED: 'Đã xác nhận', COMPLETED: 'Hoàn tất', CANCELLED: 'Đã hủy', SUCCESS: 'Thành công', FAILED: 'Thất bại', REFUNDED: 'Đã hoàn tiền', ROLE_ADMIN: 'Quản trị viên', ROLE_DOCTOR: 'Bác sĩ', ROLE_STAFF: 'Lễ tân', ROLE_PATIENT: 'Bệnh nhân' };
   const getBadgeStyle = (v: string) => {
     switch (v) {
       case 'CONFIRMED':
@@ -46,12 +47,12 @@ export const Badge: React.FC<BadgeProps> = ({ variant, label, className = '' }) 
 
   return (
     <span
-      className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold border ${getBadgeStyle(
+      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold border ${getBadgeStyle(
         variant
       )} ${className}`}
     >
       <span className="w-1.5 h-1.5 rounded-full bg-current"></span>
-      {label || variant}
+      {label || labels[variant] || variant}
     </span>
   );
 };

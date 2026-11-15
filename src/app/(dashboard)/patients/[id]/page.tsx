@@ -10,7 +10,7 @@ import { medicalRecordService } from '@/services/medicalRecordService';
 import { appointmentService } from '@/services/appointmentService';
 import { Patient, MedicalRecord, Appointment } from '@/types/api';
 import { Badge } from '@/components/ui/Badge';
-import { Calendar, FileText, Pill, CreditCard, ArrowLeft, Loader2 } from 'lucide-react';
+import { ArrowLeft, Loader2 } from 'lucide-react';
 
 export default function PatientDetailPage() {
   const params = useParams();
@@ -57,13 +57,13 @@ export default function PatientDetailPage() {
             className="inline-flex items-center gap-2 text-xs font-bold text-slate-500 hover:text-blue-600 transition"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Back to Patients List</span>
+            <span>Quay lại danh sách bệnh nhân</span>
           </Link>
 
           {loading ? (
-            <div className="p-16 flex flex-col items-center justify-center bg-white rounded-3xl border border-slate-200/80">
+            <div className="p-16 flex flex-col items-center justify-center clinic-panel bg-white rounded-3xl border border-slate-200/80">
               <Loader2 className="w-8 h-8 animate-spin text-blue-600 mb-2" />
-              <span className="text-xs text-slate-400 font-semibold">Loading profile...</span>
+              <span className="text-xs text-slate-400 font-semibold">Đang tải hồ sơ…</span>
             </div>
           ) : error || !patient ? (
             <div className="p-8 bg-rose-50 border border-rose-200 rounded-3xl text-rose-700 text-xs font-semibold">
@@ -72,7 +72,7 @@ export default function PatientDetailPage() {
           ) : (
             <>
               {/* Header Profile Card */}
-              <div className="bg-white rounded-3xl p-8 border border-slate-200/80 shadow-xs flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+              <div className="clinic-panel bg-white rounded-3xl p-8 border border-slate-200/80 shadow-xs flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                 <div className="flex items-center gap-5">
                   <div className="w-16 h-16 rounded-2xl bg-blue-600 text-white font-extrabold text-2xl flex items-center justify-center shadow-lg shadow-blue-500/20">
                     {patient.fullName.charAt(0)}
@@ -88,54 +88,54 @@ export default function PatientDetailPage() {
                       <span>Registered: {patient.createdAt?.split('T')[0] || '-'}</span>
                       <span>•</span>
                       <span>
-                        Gender: <strong className="text-slate-700">{patient.gender}</strong>
+                        Giới tính: <strong className="text-slate-700">{patient.gender}</strong>
                       </span>
                     </p>
                   </div>
                 </div>
 
                 <Link
-                  href="/appointments"
+                  href={`/appointments?book=1&patient=${patient.id}`}
                   className="px-4 py-2.5 rounded-xl bg-blue-600 text-white font-bold text-xs hover:bg-blue-700 transition shadow-sm flex items-center gap-2"
                 >
-                  <Calendar className="w-4 h-4" />
-                  <span>Book Appointment</span>
+
+                  <span>Đặt lịch khám</span>
                 </Link>
               </div>
 
               {/* Personal Details */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-xs space-y-4">
+                <div className="clinic-panel bg-white rounded-3xl p-6 border border-slate-200/80 shadow-xs space-y-4">
                   <h3 className="text-xs font-extrabold text-slate-400 uppercase tracking-wider">
                     Personal Information
                   </h3>
                   <div className="space-y-3 text-xs">
                     <div>
-                      <p className="text-slate-400">Citizen ID (CCCD)</p>
+                      <p className="text-slate-400">Căn cước công dân</p>
                       <p className="font-mono font-bold text-slate-900 mt-0.5">{patient.citizenId}</p>
                     </div>
                     <div>
-                      <p className="text-slate-400">Date of Birth</p>
+                      <p className="text-slate-400">Ngày sinh</p>
                       <p className="font-bold text-slate-900 mt-0.5">{patient.dob}</p>
                     </div>
                   </div>
                 </div>
 
-                <div className="md:col-span-2 bg-white rounded-3xl p-6 border border-slate-200/80 shadow-xs space-y-4">
+                <div className="md:col-span-2 clinic-panel bg-white rounded-3xl p-6 border border-slate-200/80 shadow-xs space-y-4">
                   <h3 className="text-xs font-extrabold text-slate-400 uppercase tracking-wider">
                     Contact & Address
                   </h3>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
                     <div>
-                      <p className="text-slate-400">Phone Number</p>
+                      <p className="text-slate-400">Số điện thoại</p>
                       <p className="font-bold text-slate-900 mt-0.5">{patient.phone}</p>
                     </div>
                     <div>
-                      <p className="text-slate-400">Email Address</p>
+                      <p className="text-slate-400">Email</p>
                       <p className="font-bold text-slate-900 mt-0.5">{patient.email}</p>
                     </div>
                     <div>
-                      <p className="text-slate-400">Residential Address</p>
+                      <p className="text-slate-400">Địa chỉ liên hệ</p>
                       <p className="font-bold text-slate-900 mt-0.5">{patient.address}</p>
                     </div>
                   </div>
@@ -143,7 +143,7 @@ export default function PatientDetailPage() {
               </div>
 
               {/* History Tabs */}
-              <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden">
+              <div className="clinic-panel bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden">
                 <div className="flex border-b border-slate-100 px-6 pt-4 gap-4 bg-slate-50/50">
                   <button
                     onClick={() => setActiveTab('records')}
@@ -153,7 +153,7 @@ export default function PatientDetailPage() {
                         : 'border-transparent text-slate-500 hover:text-slate-900'
                     }`}
                   >
-                    <FileText className="w-4 h-4" />
+
                     <span>Medical Records ({medicalRecords.length})</span>
                   </button>
                   <button
@@ -164,7 +164,7 @@ export default function PatientDetailPage() {
                         : 'border-transparent text-slate-500 hover:text-slate-900'
                     }`}
                   >
-                    <Calendar className="w-4 h-4" />
+
                     <span>Appointments History ({appointments.length})</span>
                   </button>
                 </div>
@@ -173,7 +173,7 @@ export default function PatientDetailPage() {
                   {activeTab === 'records' && (
                     <div className="space-y-4">
                       {medicalRecords.length === 0 ? (
-                        <p className="text-xs text-slate-400 font-medium">No medical records found for this patient.</p>
+                        <p className="text-xs text-slate-400 font-medium">Bệnh nhân chưa có hồ sơ bệnh án.</p>
                       ) : (
                         medicalRecords.map((rec) => (
                           <div key={rec.id} className="p-4 rounded-2xl border border-slate-200/80 bg-slate-50/50 space-y-2 text-xs">
@@ -182,11 +182,11 @@ export default function PatientDetailPage() {
                               <span className="text-slate-400">Record #{rec.id} • {rec.createdAt?.split('T')[0]}</span>
                             </div>
                             <p className="text-slate-600">
-                              <strong>Symptoms:</strong> {rec.symptoms}
+                              <strong>Triệu chứng:</strong> {rec.symptoms}
                             </p>
                             {rec.notes && (
                               <p className="text-slate-600">
-                                <strong>Doctor Notes:</strong> {rec.notes}
+                                <strong>Ghi chú bác sĩ:</strong> {rec.notes}
                               </p>
                             )}
                             {rec.doctorName && (
@@ -201,12 +201,12 @@ export default function PatientDetailPage() {
                   {activeTab === 'appointments' && (
                     <div className="space-y-3 text-xs">
                       {appointments.length === 0 ? (
-                        <p className="text-xs text-slate-400 font-medium">No appointments recorded.</p>
+                        <p className="text-xs text-slate-400 font-medium">Chưa có lịch hẹn.</p>
                       ) : (
                         appointments.map((appt) => (
                           <div key={appt.id} className="p-3.5 rounded-xl border border-slate-200 flex justify-between items-center">
                             <div>
-                              <p className="font-bold text-slate-900">{appt.doctorName || `Doctor #${appt.doctorId}`}</p>
+                              <p className="font-bold text-slate-900">{appt.doctorName || `Bác sĩ #${appt.doctorId}`}</p>
                               <p className="text-slate-500">{appt.appointmentDate} at {appt.timeSlot}</p>
                             </div>
                             <Badge variant={appt.status} />

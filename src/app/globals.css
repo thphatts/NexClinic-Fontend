@@ -1,17 +1,36 @@
 @import "tailwindcss";
 
+@theme inline {
+  --color-purple-50: #edf5f1;
+  --color-purple-100: #dcece3;
+  --color-purple-200: #bfd9cb;
+  --color-purple-500: #39866d;
+  --color-purple-600: #276952;
+  --color-purple-700: #205742;
+  --color-purple-900: #183b30;
+  --color-blue-50: #eef5f3;
+  --color-blue-100: #daeae3;
+  --color-blue-200: #bdd8cb;
+  --color-blue-500: #39866d;
+  --color-blue-600: #276952;
+  --color-blue-700: #205742;
+  --color-indigo-500: #458671;
+  --color-indigo-600: #306d59;
+  --color-indigo-700: #255744;
+}
+
 @layer base {
   :root {
-    --background: #f8fafc;
+    --background: #f7f8f5;
     --foreground: #0f172a;
-    --primary: #7c3aed;
-    --primary-light: #8b5cf6;
-    --primary-dark: #6d28d9;
-    --accent: #6366f1;
+    --primary: #276952;
+    --primary-light: #39866d;
+    --primary-dark: #205742;
+    --accent: #759071;
     --card: #ffffff;
     --card-foreground: #0f172a;
     --border: #f1f5f9;
-    --ring: #7c3aed;
+    --ring: #276952;
   }
 
   body {
@@ -19,6 +38,21 @@
     color: var(--foreground);
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background: #dcece3;
+    color: #183b30;
+  }
+
+  button, a, input, select, textarea {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+    outline: 3px solid rgba(39, 105, 82, 0.25);
+    outline-offset: 2px;
   }
 }
 
@@ -40,15 +74,156 @@
 
 /* Custom utility styles */
 .gradient-purple-hero {
-  background: linear-gradient(135deg, #6366f1 0%, #7c3aed 50%, #8b5cf6 100%);
+  background: #234e40;
 }
 
 .gradient-blue-card {
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  background: #306d59;
 }
 
 .glassmorphism {
   background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
+}
+
+@layer components {
+  .app-shell {
+    background: #f7f8f5;
+  }
+
+  .surface-card {
+    border: 1px solid rgba(226, 232, 240, 0.78);
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.045);
+    transition: box-shadow 220ms ease, border-color 220ms ease, transform 220ms ease;
+  }
+
+  .surface-card:hover {
+    border-color: rgba(137, 174, 144, 0.65);
+    box-shadow: 0 16px 38px rgba(15, 23, 42, 0.07);
+  }
+
+  .interactive-lift {
+    transition: transform 220ms ease, box-shadow 220ms ease;
+  }
+
+  .interactive-lift:hover {
+    transform: translateY(-2px);
+  }
+
+  .animate-in {
+    animation-duration: 420ms;
+    animation-fill-mode: both;
+    animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .fade-in { animation-name: fade-in; }
+  .slide-in-from-bottom-5 { animation-name: slide-in-bottom; }
+  .slide-in-from-right-5 { animation-name: slide-in-right; }
+
+  .stagger-children > * {
+    animation: slide-in-bottom 520ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  .stagger-children > *:nth-child(2) { animation-delay: 45ms; }
+  .stagger-children > *:nth-child(3) { animation-delay: 90ms; }
+  .stagger-children > *:nth-child(4) { animation-delay: 135ms; }
+  .stagger-children > *:nth-child(5) { animation-delay: 180ms; }
+  .stagger-children > *:nth-child(6) { animation-delay: 225ms; }
+}
+
+.brand-wordmark { font-size: 26px; font-weight: 650; letter-spacing: -1.4px; color: #19392f; }
+.clinic-dialog[open] { animation: slide-in-bottom .35s cubic-bezier(.16,1,.3,1); }
+.clinic-dialog::backdrop { background: #142c2466; backdrop-filter: blur(5px); animation: fade-in .25s ease; }
+.clinic-sidebar { position: fixed; inset: 0 auto 0 0; z-index: 40; width: 256px; display: flex; flex-direction: column; background: #fdfdfb; border-right: 1px solid #e5e9e3; transition: width .3s ease, transform .3s ease; }
+.sidebar-short { display: none; }
+.nav-link { position: relative; display: flex; align-items: center; justify-content: space-between; padding: 11px 14px; border-radius: 10px; color: #647068; font-size: 13px; transition: background .2s, color .2s; }
+.nav-link:hover { color: #234e40; background: #f2f5f0; }
+.nav-link.is-active { color: #234e40; background: #e7efe8; font-weight: 600; }
+.nav-active-dot { height: 5px; width: 5px; border-radius: 50%; background: #458671; }
+.clinic-header { position: sticky; top: 0; z-index: 20; display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 80px; padding: 12px 40px; border-bottom: 1px solid #e5e9e3; background: #f7f8f5e8; backdrop-filter: blur(16px); }
+.avatar-initial { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; background: #e2e9df; color: #47604a; font-size: 13px; font-weight: 600; flex-shrink: 0; }
+.eyebrow { font-size: 10px; text-transform: uppercase; letter-spacing: .17em; color: #6d8072; font-weight: 600; }
+.page-intro { margin-bottom: 28px; }
+.page-intro h1 { font-size: clamp(28px, 3vw, 38px); font-weight: 500; letter-spacing: -.04em; margin: 10px 0; }
+.page-intro > p:last-child { color: #788278; font-size: 13px; line-height: 1.7; }
+.page-enter { animation: slide-in-bottom .45s cubic-bezier(.16,1,.3,1) backwards; }
+.clinic-panel { background: white; border: 1px solid #e5e9e3; border-radius: 20px; box-shadow: 0 2px 8px #1f382503; }
+.btn-primary, .btn-secondary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 20px; border-radius: 10px; font-size: 13px; font-weight: 500; cursor: pointer; transition: background .2s, transform .2s, box-shadow .2s; }
+.btn-primary { background: #285b47; color: white; border: 1px solid #285b47; }
+.btn-primary:hover:not(:disabled) { background: #1e4938; transform: translateY(-1px); box-shadow: 0 5px 16px #285b471c; }
+.btn-secondary { background: white; color: #3f5346; border: 1px solid #dde4dc; }
+.btn-secondary:hover:not(:disabled) { background: #f0f4ee; }
+button { cursor: pointer; }
+button:disabled { cursor: not-allowed; }
+.btn-primary:disabled, .btn-secondary:disabled { opacity: .5; transform: none; }
+.field-label { display: block; margin-bottom: 8px; font-size: 12px; font-weight: 500; color: #46594c; }
+.field-input { width: 100%; border: 1px solid #dce3da; background: #fcfdfb; padding: 12px 14px; border-radius: 10px; font-size: 14px; color: #25382b; transition: border-color .2s, box-shadow .2s; }
+.field-input:focus { outline: none; border-color: #638d75; box-shadow: 0 0 0 3px #638d7515; }
+label:has(input:focus-visible) { outline: 3px solid #638d7555; outline-offset: 3px; }
+.clinic-content table { font-size: 13px; }
+.clinic-content table th { font-size: 10px; letter-spacing: .08em; font-weight: 600; background: #f7f9f5; color: #788578; }
+.clinic-content table td { padding-top: 20px; padding-bottom: 20px; }
+.clinic-content table tbody tr { transition: background .2s ease; }
+.clinic-content table tbody tr:hover { background: #f8faf6; }
+.clinic-content table tbody tr { animation: fade-in .4s ease backwards; }
+.clinic-content input:not([type=radio]):not([type=checkbox]):not([type=range]), .clinic-content select, .clinic-content textarea { font-size: 13px; }
+.clinic-content .font-extrabold, .clinic-content .font-black { font-weight: 600; }
+.skip-link { position: fixed; top: -100px; left: 12px; z-index: 100; background: white; padding: 12px; }
+.skip-link:focus { top: 12px; }
+.auth-shell { min-height: 100dvh; display: grid; grid-template-columns: 1fr 1fr; background: #fafbf8; }
+.auth-story { position: sticky; top: 0; height: 100dvh; display: flex; flex-direction: column; justify-content: space-between; padding: 48px; background: #e8eee4; overflow: hidden; }
+.auth-story h2 { position: relative; z-index: 1; font-family: Georgia, 'Times New Roman', serif; font-size: clamp(40px, 5vw, 70px); font-weight: 400; line-height: 1.15; letter-spacing: -.045em; color: #294a38; }
+.auth-orbit { position: absolute; width: 440px; height: 440px; border: 1px solid #a9bfa67a; border-radius: 50%; right: -100px; bottom: -120px; animation: gentle-float 12s ease-in-out infinite; }
+.auth-orbit::after { content: ''; position: absolute; inset: 45px; border: 1px solid #a9bfa67a; border-radius: 50%; }
+.public-section { max-width: 1200px; margin: auto; padding: 80px 28px; }
+.display-heading { font-family: Georgia, 'Times New Roman', serif; font-weight: 400; line-height: 1.12; letter-spacing: -.05em; }
+.hero-art { background: #e6edde; border-radius: 180px 180px 24px 24px; min-height: 440px; padding: 45px 25px; display: flex; flex-direction: column; justify-content: center; position: relative; overflow: hidden; }
+.hero-art::before { content: ''; position: absolute; width: 300px; height: 300px; border: 1px solid #b4c6aa; border-radius: 50%; top: 45px; left: 50%; transform: translateX(-50%); }
+.hero-art > div { position: relative; animation: gentle-float 8s ease-in-out infinite; }
+@keyframes gentle-float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+@media (min-width: 768px) {
+  .clinic-sidebar.is-collapsed { width: 96px; }
+  .clinic-sidebar.is-collapsed .sidebar-label { display: none; }
+  .clinic-sidebar.is-collapsed .sidebar-short { display: inline; }
+  .clinic-sidebar.is-collapsed .brand-wordmark { font-size: 20px; }
+}
+@media (max-width: 767px) {
+  .clinic-sidebar { transform: translateX(-100%); }
+  .clinic-sidebar.is-open { transform: translateX(0); }
+  .clinic-header { min-height: 68px; padding: 12px 16px; }
+  .auth-shell { grid-template-columns: 1fr; }
+  .auth-story { position: relative; height: auto; min-height: 240px; padding: 28px; gap: 28px; }
+  .auth-story h2 { font-size: 36px; }
+  .public-section { padding: 48px 20px; }
+}
+@media print {
+  .clinic-sidebar, .clinic-header, .page-intro, .assistant-widget { display: none !important; }
+  .app-shell > div { margin: 0 !important; }
+  .clinic-content { padding: 0 !important; }
+  .clinic-content button { display: none !important; }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slide-in-bottom {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slide-in-right {
+  from { opacity: 0; transform: translateX(16px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
 }

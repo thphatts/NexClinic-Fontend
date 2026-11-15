@@ -27,7 +27,7 @@ export const StatCard: React.FC<StatCardProps> = ({
   };
 
   return (
-    <div className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-xs hover:shadow-md transition-all duration-200 flex flex-col justify-between">
+    <div className="surface-card interactive-lift bg-white/90 rounded-3xl p-5 md:p-6 flex flex-col justify-between">
       <div className="flex items-center justify-between mb-4">
         <span className="text-sm font-semibold text-slate-500">{title}</span>
         <div className={`p-2.5 rounded-xl border ${colorClasses[colorScheme]}`}>

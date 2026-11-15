@@ -1,140 +1,35 @@
-"use client";
+'use client';
 
-import React, { useState } from "react";
-import Link from "next/link";
-import { authService } from "@/services/authService";
-import { useAuthStore } from "@/store/useAuthStore";
-import { Loader2, Lock, Mail, ShieldCheck, UserPlus } from "lucide-react";
+import { useState } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { AuthShell } from '@/components/auth/AuthShell';
+import { authService } from '@/services/authService';
+import { useAuthStore } from '@/store/useAuthStore';
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
-  const [usernameOrEmail, setUsernameOrEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
   const { setAuth } = useAuthStore();
-
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
-    try {
-      const authRes = await authService.login({
-        username: usernameOrEmail.trim(),
-        password,
-      });
-      setAuth(authRes);
-      window.location.href = "/dashboard";
-    } catch (err: unknown) {
-      const errorObj = err as {
-        response?: { data?: { message?: string } };
-        message?: string;
-      };
-      setError(
-        errorObj.response?.data?.message ||
-          errorObj.message ||
-          "Invalid username or password",
-      );
-    } finally {
-      setLoading(false);
-    }
+  const router = useRouter();
+  const submit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setLoading(true); setError(null);
+    try { setAuth(await authService.login({ username: username.trim(), password })); router.replace('/dashboard'); }
+    catch { setError('Không thể đăng nhập. Kiểm tra tài khoản, mật khẩu hoặc thử lại sau.'); setLoading(false); }
   };
-
-  return (
-    <div className="bg-slate-900 text-slate-100 min-h-screen w-full flex items-center justify-center font-sans antialiased p-4">
-      <div className="w-full max-w-md bg-slate-800/90 border border-slate-700/80 rounded-3xl p-8 shadow-2xl backdrop-blur-md space-y-6">
-        {/* Brand Header */}
-        <div className="text-center space-y-2">
-          <div className="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-br from-blue-600 to-purple-600 text-white flex items-center justify-center font-extrabold text-2xl shadow-lg shadow-blue-500/20">
-            ✦
-          </div>
-          <h1 className="text-2xl font-extrabold text-white tracking-tight">
-            NexClinic Portal
-          </h1>
-          <p className="text-xs text-slate-400">
-            Sign in to access your authorized clinic environment
-          </p>
-        </div>
-
-        {error && (
-          <div className="p-3.5 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-semibold text-center">
-            {error}
-          </div>
-        )}
-
-        <form onSubmit={handleLogin} className="space-y-4 text-xs">
-          <div>
-            <label className="block text-slate-300 font-semibold mb-1">
-              Username or Email
-            </label>
-            <div className="relative">
-              <input
-                required
-                type="text"
-                value={usernameOrEmail}
-                onChange={(e) => setUsernameOrEmail(e.target.value)}
-                placeholder="Enter your username or email"
-                className="w-full px-4 py-3 pl-10 rounded-xl bg-slate-900/80 border border-slate-700 text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none transition"
-              />
-              <Mail className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-slate-300 font-semibold mb-1">
-              Password
-            </label>
-            <div className="relative">
-              <input
-                required
-                type={showPassword ? "text" : "password"}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                className="w-full px-4 py-3 pl-10 rounded-xl bg-slate-900/80 border border-slate-700 text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none transition"
-              />
-              <Lock className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400 hover:text-white"
-              >
-                {showPassword ? "HIDE" : "SHOW"}
-              </button>
-            </div>
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-3 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-500 disabled:opacity-50 transition shadow-md shadow-blue-600/20 flex items-center justify-center gap-2 text-xs"
-          >
-            {loading ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                <span>Authenticating...</span>
-              </>
-            ) : (
-              <>
-                <ShieldCheck className="w-4 h-4" />
-                <span>Sign In</span>
-              </>
-            )}
-          </button>
-        </form>
-
-        <div className="pt-4 border-t border-slate-700/60 text-center text-xs text-slate-400">
-          Chưa có tài khoản?{" "}
-          <Link
-            href="/register"
-            className="text-blue-400 font-bold hover:underline inline-flex items-center gap-1 ml-1"
-          >
-            <UserPlus className="w-3.5 h-3.5 inline" />
-            <span>Đăng ký ngay</span>
-          </Link>
-        </div>
-      </div>
-    </div>
-  );
+  return <AuthShell>
+    <p className="eyebrow">CHÀO MỪNG BẠN TRỞ LẠI</p><h1 className="mt-3 text-3xl font-medium tracking-tight">Đăng nhập</h1><p className="mb-9 mt-3 text-sm leading-6 text-slate-500">Tiếp tục hành trình chăm sóc sức khỏe của bạn.</p>
+    {error && <p role="alert" className="mb-5 rounded-xl bg-rose-50 p-4 text-sm text-rose-700">{error}</p>}
+    <form onSubmit={submit} className="space-y-5">
+      <div><label htmlFor="username" className="field-label">Tên đăng nhập hoặc email</label><input id="username" autoComplete="username" required value={username} onChange={(event) => setUsername(event.target.value)} className="field-input" placeholder="Nhập tài khoản của bạn" /></div>
+      <div><label htmlFor="password" className="field-label">Mật khẩu</label><div className="relative"><input id="password" type={showPassword ? 'text' : 'password'} autoComplete="current-password" required value={password} onChange={(event) => setPassword(event.target.value)} className="field-input pr-16" placeholder="Nhập mật khẩu" /><button type="button" aria-pressed={showPassword} onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-3.5 text-xs text-slate-500">{showPassword ? 'Ẩn' : 'Hiện'}</button></div></div>
+      <button disabled={loading} className="btn-primary w-full !mt-7">{loading ? 'Đang đăng nhập…' : 'Đăng nhập'}</button>
+    </form>
+    <p className="mt-7 text-center text-sm text-slate-500">Chưa có tài khoản? <Link href="/register" className="font-medium text-teal-800">Đăng ký</Link></p>
+    <Link href="/" className="mt-10 block text-center text-xs text-slate-400 hover:text-teal-800">Quay về trang chủ</Link>
+  </AuthShell>;
 }

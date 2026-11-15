@@ -1,5 +1,7 @@
 'use client';
 
+import { useFeedback } from '@/providers/FeedbackProvider';
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Badge } from '@/components/ui/Badge';
@@ -7,10 +9,11 @@ import { Modal } from '@/components/ui/Modal';
 import { RoleGuard } from '@/components/auth/RoleGuard';
 import { useLanguage } from '@/context/LanguageContext';
 import { userService, UserCreateParams } from '@/services/userService';
-import { Search, Plus, Trash2, Loader2 } from 'lucide-react';
+import { Trash2, Loader2 } from 'lucide-react';
 import { User as UserModel } from '@/types/api';
 
 export default function UsersPage() {
+  const { notify, confirmAction } = useFeedback();
   const { t } = useLanguage();
   const [users, setUsers] = useState<UserModel[]>([]);
   const [loading, setLoading] = useState(true);
@@ -68,20 +71,20 @@ export default function UsersPage() {
       fetchUsers();
     } catch (err: unknown) {
       const errorObj = err as { response?: { data?: { message?: string } }; message?: string };
-      alert(errorObj.response?.data?.message || 'Failed to create user account');
+      notify(errorObj.response?.data?.message || 'Không tạo được tài khoản');
     } finally {
       setSubmitting(false);
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this user account?')) return;
+    if (!await confirmAction('Bạn muốn xóa tài khoản này?')) return;
     try {
       await userService.deleteUser(id);
       fetchUsers();
     } catch (err: unknown) {
       const errorObj = err as { response?: { data?: { message?: string } }; message?: string };
-      alert(errorObj.response?.data?.message || 'Failed to delete user');
+      notify(errorObj.response?.data?.message || 'Không xóa được tài khoản');
     }
   };
 
@@ -97,15 +100,14 @@ export default function UsersPage() {
       <RoleGuard allowedRoles={['ROLE_ADMIN']}>
         <div className="space-y-6">
           {/* Header Controls */}
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 clinic-panel bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs">
             <div className="relative w-full sm:w-80">
-              <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
               <input
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder={t('searchUsersPlaceholder')}
-                className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-slate-100 border-none text-xs text-slate-900 placeholder-slate-400 focus:bg-white focus:ring-2 focus:ring-blue-600 focus:outline-none transition"
+                className="w-full pl-4 pr-4 py-2.5 rounded-xl bg-slate-100 border-none text-xs text-slate-900 placeholder-slate-400 focus:bg-white focus:ring-2 focus:ring-blue-600 focus:outline-none transition"
               />
             </div>
 
@@ -113,7 +115,6 @@ export default function UsersPage() {
               onClick={() => setIsModalOpen(true)}
               className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-blue-600 text-white font-bold text-xs hover:bg-blue-700 transition shadow-sm flex items-center justify-center gap-2"
             >
-              <Plus className="w-4 h-4" />
               <span>{t('createUser')}</span>
             </button>
           </div>
@@ -125,11 +126,11 @@ export default function UsersPage() {
           )}
 
           {/* Users Table */}
-          <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden">
+          <div className="clinic-panel bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden">
             {loading ? (
               <div className="p-16 flex flex-col items-center justify-center text-slate-400">
                 <Loader2 className="w-8 h-8 animate-spin text-blue-600 mb-2" />
-                <span className="text-xs font-semibold">Loading system users...</span>
+                <span className="text-xs font-semibold">Đang tải tài khoản…</span>
               </div>
             ) : filtered.length === 0 ? (
               <div className="p-16 text-center text-slate-400 text-xs font-medium">
@@ -172,7 +173,7 @@ export default function UsersPage() {
                           <button
                             onClick={() => handleDelete(u.id)}
                             className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition"
-                            title="Delete User"
+                            title="Xóa tài khoản"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -191,7 +192,7 @@ export default function UsersPage() {
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
           title={t('createUser')}
-          subtitle="Provision account credentials and role authorization."
+          subtitle="Tạo tài khoản và thiết lập vai trò truy cập."
         >
           <form onSubmit={handleSubmit} className="space-y-4 text-xs">
             <div>
@@ -201,7 +202,7 @@ export default function UsersPage() {
                 type="text"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="e.g. Nguyen Van An"
+                placeholder="Nguyễn Văn An"
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-600 focus:outline-none"
               />
             </div>
@@ -213,12 +214,12 @@ export default function UsersPage() {
                   type="text"
                   value={formData.username}
                   onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                  placeholder="e.g. dr.tuan"
+                  placeholder="bacsi.tuan"
                   className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-600 focus:outline-none font-mono"
                 />
               </div>
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">Password</label>
+                <label className="block font-semibold text-slate-700 mb-1">Mật khẩu</label>
                 <input
                   required
                   type="password"
@@ -249,10 +250,10 @@ export default function UsersPage() {
                   onChange={(e) => setFormData({ ...formData, role: e.target.value })}
                   className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-600 focus:outline-none bg-white"
                 >
-                  <option value="ROLE_ADMIN">ROLE_ADMIN (Full Management)</option>
-                  <option value="ROLE_DOCTOR">ROLE_DOCTOR (Physician)</option>
-                  <option value="ROLE_STAFF">ROLE_STAFF (Receptionist)</option>
-                  <option value="ROLE_PATIENT">ROLE_PATIENT (Patient Portal)</option>
+                  <option value="ROLE_ADMIN">Quản trị viên</option>
+                  <option value="ROLE_DOCTOR">Bác sĩ</option>
+                  <option value="ROLE_STAFF">Lễ tân</option>
+                  <option value="ROLE_PATIENT">Bệnh nhân</option>
                 </select>
               </div>
             </div>

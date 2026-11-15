@@ -1,5 +1,4 @@
 import React from 'react';
-import { FolderOpen } from 'lucide-react';
 
 interface EmptyStateProps {
   title?: string;
@@ -9,16 +8,13 @@ interface EmptyStateProps {
 }
 
 export const EmptyState: React.FC<EmptyStateProps> = ({
-  title = 'No records found',
-  description = 'There is currently no data to display in this list.',
+  title = 'Chưa có dữ liệu',
+  description = 'Thông tin sẽ xuất hiện tại đây khi được cập nhật.',
   actionLabel,
   onAction,
 }) => {
   return (
     <div className="flex flex-col items-center justify-center p-12 text-center bg-white rounded-3xl border border-dashed border-slate-200">
-      <div className="w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mb-4">
-        <FolderOpen className="w-7 h-7" />
-      </div>
       <h4 className="text-base font-bold text-slate-900 mb-1">{title}</h4>
       <p className="text-xs text-slate-500 max-w-sm mb-6 leading-relaxed">{description}</p>
       {actionLabel && onAction && (

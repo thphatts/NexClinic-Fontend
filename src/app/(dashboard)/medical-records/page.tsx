@@ -1,5 +1,7 @@
 'use client';
 
+import { useFeedback } from '@/providers/FeedbackProvider';
+
 import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { AppLayout } from '@/components/layout/AppLayout';
@@ -11,9 +13,10 @@ import { medicalRecordService, MedicalRecordCreateParams } from '@/services/medi
 import { patientService } from '@/services/patientService';
 import { doctorService } from '@/services/doctorService';
 import { MedicalRecord, Patient, Doctor } from '@/types/api';
-import { Search, Plus, Eye, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 
 export default function MedicalRecordsPage() {
+  const { notify } = useFeedback();
   const { t } = useLanguage();
   const [records, setRecords] = useState<MedicalRecord[]>([]);
   const [loading, setLoading] = useState(true);
@@ -100,7 +103,7 @@ export default function MedicalRecordsPage() {
       fetchRecords();
     } catch (err: unknown) {
       const errorObj = err as { response?: { data?: { message?: string } }; message?: string };
-      alert(errorObj.response?.data?.message || 'Failed to create medical record');
+      notify(errorObj.response?.data?.message || 'Không tạo được bệnh án');
     } finally {
       setSubmitting(false);
     }
@@ -111,13 +114,12 @@ export default function MedicalRecordsPage() {
       <RoleGuard allowedRoles={['ROLE_ADMIN', 'ROLE_DOCTOR', 'ROLE_PATIENT']}>
         <div className="space-y-6">
           {/* Header Controls */}
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 clinic-panel bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs">
             <RoleGuard allowedRoles={['ROLE_ADMIN', 'ROLE_DOCTOR']} fallback={<div />}>
               <button
                 onClick={handleOpenCreateModal}
                 className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-blue-600 text-white font-bold text-xs hover:bg-blue-700 transition shadow-sm flex items-center justify-center gap-2"
               >
-                <Plus className="w-4 h-4" />
                 <span>{t('createMedicalRecord')}</span>
               </button>
             </RoleGuard>
@@ -130,11 +132,11 @@ export default function MedicalRecordsPage() {
           )}
 
           {/* EMR Table */}
-          <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden">
+          <div className="clinic-panel bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden">
             {loading ? (
               <div className="p-16 flex flex-col items-center justify-center text-slate-400">
                 <Loader2 className="w-8 h-8 animate-spin text-blue-600 mb-2" />
-                <span className="text-xs font-semibold">Loading medical records...</span>
+                <span className="text-xs font-semibold">Đang tải bệnh án…</span>
               </div>
             ) : records.length === 0 ? (
               <div className="p-16 text-center text-slate-400 text-xs font-medium">
@@ -163,10 +165,10 @@ export default function MedicalRecordsPage() {
                           </span>
                         </td>
                         <td className="px-6 py-4 font-bold text-slate-900">
-                          {rec.patientName || `Patient #${rec.patientId}`}
+                          {rec.patientName || `Bệnh nhân #${rec.patientId}`}
                         </td>
                         <td className="px-6 py-4 text-blue-600 font-semibold">
-                          {rec.doctorName || `Doctor #${rec.doctorId}`}
+                          {rec.doctorName || `Bác sĩ #${rec.doctorId}`}
                         </td>
                         <td className="px-6 py-4">
                           <span className="inline-block px-2.5 py-1 rounded-full bg-purple-50 text-purple-700 border border-purple-200 text-[11px] font-bold">
@@ -180,7 +182,7 @@ export default function MedicalRecordsPage() {
                             href={`/medical-records/${rec.id}`}
                             className="px-3 py-1.5 rounded-xl bg-blue-50 text-blue-700 font-bold text-[11px] hover:bg-blue-600 hover:text-white transition inline-flex items-center gap-1.5"
                           >
-                            <Eye className="w-3.5 h-3.5" />
+
                             <span>{t('viewAndAiSummary')}</span>
                           </Link>
                         </td>
@@ -211,12 +213,12 @@ export default function MedicalRecordsPage() {
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
           title={t('createMedicalRecord')}
-          subtitle="Document clinical examination notes and diagnosis."
+          subtitle="Ghi nhận thông tin khám, chẩn đoán và hướng điều trị."
         >
           <form onSubmit={handleSubmit} className="space-y-4 text-xs">
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">Patient</label>
+                <label className="block font-semibold text-slate-700 mb-1">Bệnh nhân</label>
                 <select
                   value={formData.patientId}
                   onChange={(e) => setFormData({ ...formData, patientId: Number(e.target.value) })}
@@ -231,7 +233,7 @@ export default function MedicalRecordsPage() {
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">Attending Doctor</label>
+                <label className="block font-semibold text-slate-700 mb-1">Bác sĩ phụ trách</label>
                 <select
                   value={formData.doctorId}
                   onChange={(e) => setFormData({ ...formData, doctorId: Number(e.target.value) })}
@@ -247,7 +249,7 @@ export default function MedicalRecordsPage() {
             </div>
 
             <div>
-              <label className="block font-semibold text-slate-700 mb-1">Appointment ID</label>
+              <label className="block font-semibold text-slate-700 mb-1">Mã lịch hẹn</label>
               <input
                 required
                 type="number"
@@ -264,7 +266,7 @@ export default function MedicalRecordsPage() {
                 rows={2}
                 value={formData.symptoms}
                 onChange={(e) => setFormData({ ...formData, symptoms: e.target.value })}
-                placeholder="Describe patient symptoms..."
+                placeholder="Mô tả triệu chứng của bệnh nhân…"
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-600 focus:outline-none"
               />
             </div>
@@ -276,24 +278,24 @@ export default function MedicalRecordsPage() {
                 type="text"
                 value={formData.diagnosis}
                 onChange={(e) => setFormData({ ...formData, diagnosis: e.target.value })}
-                placeholder="Primary clinical diagnosis..."
+                placeholder="Nhập chẩn đoán chính…"
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-600 focus:outline-none"
               />
             </div>
 
             <div>
-              <label className="block font-semibold text-slate-700 mb-1">Doctor Notes & Treatment</label>
+              <label className="block font-semibold text-slate-700 mb-1">Ghi chú và hướng điều trị</label>
               <textarea
                 rows={2}
                 value={formData.notes}
                 onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                placeholder="Treatment plan, advice..."
+                placeholder="Kế hoạch điều trị, hướng dẫn…"
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-600 focus:outline-none"
               />
             </div>
 
             <div>
-              <label className="block font-semibold text-slate-700 mb-1">Re-examination Date</label>
+              <label className="block font-semibold text-slate-700 mb-1">Ngày tái khám</label>
               <input
                 type="date"
                 value={formData.reexaminationDate}

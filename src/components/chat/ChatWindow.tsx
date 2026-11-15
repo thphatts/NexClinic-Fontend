@@ -109,7 +109,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ room }) => {
         {/* Connection indicator */}
         <div className={`flex items-center gap-1.5 text-xs font-semibold ${connected ? 'text-emerald-600' : 'text-amber-500'}`}>
           {connected ? <Wifi className="w-3.5 h-3.5" /> : <WifiOff className="w-3.5 h-3.5" />}
-          <span>{connected ? 'Real-time' : 'Kết nối lại...'}</span>
+          <span>{connected ? 'Trực tuyến' : 'Kết nối lại...'}</span>
         </div>
       </div>
 

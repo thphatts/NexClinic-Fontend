@@ -1,5 +1,7 @@
 'use client';
 
+import { useFeedback } from '@/providers/FeedbackProvider';
+
 import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { AppLayout } from '@/components/layout/AppLayout';
@@ -8,10 +10,11 @@ import { Pagination } from '@/components/ui/Pagination';
 import { RoleGuard } from '@/components/auth/RoleGuard';
 import { useLanguage } from '@/context/LanguageContext';
 import { patientService, PatientCreateParams } from '@/services/patientService';
-import { Search, Plus, Eye, Edit2, Phone, Mail, Trash2, Loader2 } from 'lucide-react';
+import { Eye, Edit2, Mail, Trash2, Loader2 } from 'lucide-react';
 import { Patient } from '@/types/api';
 
 export default function PatientsPage() {
+  const { notify, confirmAction } = useFeedback();
   const { t } = useLanguage();
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -104,20 +107,20 @@ export default function PatientsPage() {
       fetchPatients();
     } catch (err: unknown) {
       const errorObj = err as { response?: { data?: { message?: string } }; message?: string };
-      alert(errorObj.response?.data?.message || 'Failed to save patient');
+      notify(errorObj.response?.data?.message || 'Không lưu được hồ sơ bệnh nhân');
     } finally {
       setSubmitting(false);
     }
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('Are you sure you want to delete this patient record?')) return;
+    if (!await confirmAction('Bạn muốn xóa hồ sơ bệnh nhân này?')) return;
     try {
       await patientService.deletePatient(id);
       fetchPatients();
     } catch (err: unknown) {
       const errorObj = err as { response?: { data?: { message?: string } }; message?: string };
-      alert(errorObj.response?.data?.message || 'Failed to delete patient');
+      notify(errorObj.response?.data?.message || 'Không xóa được hồ sơ bệnh nhân');
     }
   };
 
@@ -126,9 +129,8 @@ export default function PatientsPage() {
       <RoleGuard allowedRoles={['ROLE_ADMIN', 'ROLE_DOCTOR', 'ROLE_STAFF']}>
         <div className="space-y-6">
           {/* Header Controls */}
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 clinic-panel bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs">
             <div className="relative w-full sm:w-80">
-              <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
               <input
                 type="text"
                 value={search}
@@ -137,7 +139,7 @@ export default function PatientsPage() {
                   setPage(1);
                 }}
                 placeholder={t('searchPatientsPlaceholder')}
-                className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-slate-100 border-none text-xs text-slate-900 placeholder-slate-400 focus:bg-white focus:ring-2 focus:ring-blue-600 focus:outline-none transition"
+                className="w-full pl-4 pr-4 py-2.5 rounded-xl bg-slate-100 border-none text-xs text-slate-900 placeholder-slate-400 focus:bg-white focus:ring-2 focus:ring-blue-600 focus:outline-none transition"
               />
             </div>
 
@@ -145,7 +147,6 @@ export default function PatientsPage() {
               onClick={handleOpenCreateModal}
               className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-blue-600 text-white font-bold text-xs hover:bg-blue-700 transition shadow-sm flex items-center justify-center gap-2"
             >
-              <Plus className="w-4 h-4" />
               <span>{t('addNewPatient')}</span>
             </button>
           </div>
@@ -157,15 +158,15 @@ export default function PatientsPage() {
           )}
 
           {/* Patient Table */}
-          <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden">
+          <div className="clinic-panel bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden">
             {loading ? (
               <div className="p-12 flex flex-col items-center justify-center text-slate-400 space-y-3">
                 <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-                <span className="text-xs font-medium">Loading patients...</span>
+                <span className="text-xs font-medium">Đang tải bệnh nhân…</span>
               </div>
             ) : patients.length === 0 ? (
               <div className="p-12 text-center text-slate-400 text-xs font-medium">
-                No patients found. Click &quot;Add New Patient&quot; to register a patient.
+                Chưa có bệnh nhân phù hợp. Click &quot;Add New Patient&quot; to register a patient.
               </div>
             ) : (
               <div className="overflow-x-auto">
@@ -201,7 +202,7 @@ export default function PatientsPage() {
                         </td>
                         <td className="px-6 py-4 space-y-0.5">
                           <p className="flex items-center gap-1.5 text-slate-800">
-                            <Phone className="w-3 h-3 text-slate-400" />
+
                             <span>{patient.phone}</span>
                           </p>
                           <p className="flex items-center gap-1.5 text-slate-400 text-[11px]">
@@ -234,7 +235,7 @@ export default function PatientsPage() {
                           <button
                             onClick={() => handleDelete(patient.id)}
                             className="p-2 inline-flex rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition"
-                            title="Delete"
+                            title="Xóa"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -276,7 +277,7 @@ export default function PatientsPage() {
                 type="text"
                 value={formData.fullName}
                 onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                placeholder="e.g. Nguyen Van An"
+                placeholder="Nguyễn Văn An"
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-600 focus:outline-none"
               />
             </div>
@@ -288,7 +289,7 @@ export default function PatientsPage() {
                   type="text"
                   value={formData.citizenId}
                   onChange={(e) => setFormData({ ...formData, citizenId: e.target.value })}
-                  placeholder="12 digit CCCD"
+                  placeholder="12 chữ số căn cước"
                   className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-600 focus:outline-none font-mono"
                 />
               </div>
@@ -346,7 +347,7 @@ export default function PatientsPage() {
                 type="text"
                 value={formData.address}
                 onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                placeholder="Full home address..."
+                placeholder="Địa chỉ liên hệ đầy đủ…"
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-600 focus:outline-none"
               />
             </div>

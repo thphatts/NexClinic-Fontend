@@ -7,7 +7,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import { formatCurrency } from '@/lib/format';
 import { medicalRecordService } from '@/services/medicalRecordService';
 import { MedicalRecord, Prescription } from '@/types/api';
-import { Printer, Download, Search, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 
 export default function PrescriptionsPage() {
   const { t } = useLanguage();
@@ -40,8 +40,8 @@ export default function PrescriptionsPage() {
     ? {
         id: medicalRecord.id,
         medicalRecordId: medicalRecord.id,
-        patientName: medicalRecord.patientName || `Patient #${medicalRecord.patientId}`,
-        doctorName: medicalRecord.doctorName || `Doctor #${medicalRecord.doctorId}`,
+        patientName: medicalRecord.patientName || `Bệnh nhân #${medicalRecord.patientId}`,
+        doctorName: medicalRecord.doctorName || `Bác sĩ #${medicalRecord.doctorId}`,
         notes: medicalRecord.notes || 'Take medications as directed by physician after meals.',
         totalAmount: 150000,
         items: [
@@ -64,16 +64,15 @@ export default function PrescriptionsPage() {
       <RoleGuard allowedRoles={['ROLE_ADMIN', 'ROLE_DOCTOR', 'ROLE_STAFF']}>
         <div className="space-y-6">
           {/* Actions & Lookup Bar */}
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 clinic-panel bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs">
             <div className="flex items-center gap-2 w-full sm:w-auto">
               <div className="relative w-full sm:w-64">
-                <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
                 <input
                   type="number"
                   value={recordIdInput}
                   onChange={(e) => setRecordIdInput(e.target.value)}
-                  placeholder="Enter Medical Record ID..."
-                  className="w-full pl-9 pr-4 py-2 rounded-xl bg-slate-100 border-none text-xs text-slate-900 focus:ring-2 focus:ring-blue-600 focus:outline-none"
+                  placeholder="Nhập mã bệnh án…"
+                  className="w-full pl-4 pr-4 py-2 rounded-xl bg-slate-100 border-none text-xs text-slate-900 focus:ring-2 focus:ring-blue-600 focus:outline-none"
                 />
               </div>
               <button
@@ -91,14 +90,14 @@ export default function PrescriptionsPage() {
                 onClick={() => window.print()}
                 className="px-4 py-2 rounded-xl border border-slate-200 text-slate-700 font-semibold text-xs hover:bg-slate-50 transition flex items-center gap-2"
               >
-                <Printer className="w-4 h-4" />
+
                 <span>{t('printPrescription')}</span>
               </button>
               <button
-                onClick={() => alert('Exporting PDF...')}
+                onClick={() => window.print()}
                 className="px-4 py-2 rounded-xl bg-blue-600 text-white font-bold text-xs hover:bg-blue-700 transition shadow-sm flex items-center gap-2"
               >
-                <Download className="w-4 h-4" />
+
                 <span>{t('exportPdf')}</span>
               </button>
             </div>
@@ -112,12 +111,12 @@ export default function PrescriptionsPage() {
 
           {/* Medical Document Container */}
           {loading ? (
-            <div className="p-16 flex flex-col items-center justify-center bg-white rounded-3xl border border-slate-200/80">
+            <div className="p-16 flex flex-col items-center justify-center clinic-panel bg-white rounded-3xl border border-slate-200/80">
               <Loader2 className="w-8 h-8 animate-spin text-blue-600 mb-2" />
-              <span className="text-xs text-slate-400 font-semibold">Fetching prescription data...</span>
+              <span className="text-xs text-slate-400 font-semibold">Đang tải đơn thuốc…</span>
             </div>
           ) : activePrescription ? (
-            <div className="bg-white rounded-3xl p-8 border border-slate-200/80 shadow-lg max-w-4xl mx-auto space-y-8 print:border-none print:shadow-none">
+            <div className="clinic-panel bg-white rounded-3xl p-8 border border-slate-200/80 shadow-lg max-w-4xl mx-auto space-y-8 print:border-none print:shadow-none">
               {/* Header */}
               <div className="flex justify-between items-start border-b border-slate-200 pb-6">
                 <div>
@@ -127,8 +126,8 @@ export default function PrescriptionsPage() {
                     </span>
                     NexClinic
                   </div>
-                  <p className="text-xs text-slate-500 mt-1">AI-Powered Precision Healthcare Center</p>
-                  <p className="text-[11px] text-slate-400">123 Health Science Avenue, Ho Chi Minh City</p>
+                  <p className="text-xs text-slate-500 mt-1">Thông tin đơn thuốc</p>
+                  <p className="text-[11px] text-slate-400">NexClinic · Cổng thông tin phòng khám</p>
                 </div>
                 <div className="text-right">
                   <span className="inline-block px-3 py-1 rounded-full bg-blue-50 text-blue-700 font-mono text-xs font-bold border border-blue-200">
@@ -205,7 +204,7 @@ export default function PrescriptionsPage() {
               </div>
             </div>
           ) : (
-            <div className="p-16 text-center text-slate-400 text-xs font-medium bg-white rounded-3xl border border-slate-200/80">
+            <div className="p-16 text-center text-slate-400 text-xs font-medium clinic-panel bg-white rounded-3xl border border-slate-200/80">
               No prescription found for the entered medical record ID.
             </div>
           )}

@@ -1,5 +1,7 @@
 'use client';
 
+import { useFeedback } from '@/providers/FeedbackProvider';
+
 import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
@@ -9,9 +11,10 @@ import { formatCurrency } from '@/lib/format';
 import { doctorService, DoctorScheduleCreateParams } from '@/services/doctorService';
 import { useAuthStore } from '@/store/useAuthStore';
 import { Doctor, DoctorSchedule, DoctorReview } from '@/types/api';
-import { UserCheck, Clock, ArrowLeft, Plus, Star, Trash2, Loader2, CalendarPlus, Phone, Mail, Award, CheckCircle2, MessageSquare } from 'lucide-react';
+import { UserCheck, ArrowLeft, Star, Trash2, Loader2, Mail } from 'lucide-react';
 
 export default function DoctorDetailPage() {
+  const { notify, confirmAction } = useFeedback();
   const params = useParams();
   const doctorId = Number(params?.id);
   const { hasRole } = useAuthStore();
@@ -70,20 +73,20 @@ export default function DoctorDetailPage() {
       fetchData();
     } catch (err: unknown) {
       const errorObj = err as { response?: { data?: { message?: string } }; message?: string };
-      alert(errorObj.response?.data?.message || 'Không thể thêm ca trực');
+      notify(errorObj.response?.data?.message || 'Không thể thêm ca trực');
     } finally {
       setSubmittingSchedule(false);
     }
   };
 
   const handleDeleteSchedule = async (scheduleId: number) => {
-    if (!confirm('Bạn có chắc muốn xóa ca trực này?')) return;
+    if (!await confirmAction('Bạn có chắc muốn xóa ca trực này?')) return;
     try {
       await doctorService.deleteSchedule(doctorId, scheduleId);
       fetchData();
     } catch (err: unknown) {
       const errorObj = err as { response?: { data?: { message?: string } }; message?: string };
-      alert(errorObj.response?.data?.message || 'Không thể xóa ca trực');
+      notify(errorObj.response?.data?.message || 'Không thể xóa ca trực');
     }
   };
 
@@ -109,7 +112,7 @@ export default function DoctorDetailPage() {
         </Link>
 
         {loading ? (
-          <div className="p-16 flex flex-col items-center justify-center bg-white rounded-3xl border border-slate-100 shadow-xs">
+          <div className="p-16 flex flex-col items-center justify-center clinic-panel bg-white rounded-3xl border border-slate-100 shadow-xs">
             <Loader2 className="w-8 h-8 animate-spin text-purple-600 mb-2" />
             <span className="text-xs text-slate-400 font-semibold">Đang tải hồ sơ bác sĩ...</span>
           </div>
@@ -120,7 +123,7 @@ export default function DoctorDetailPage() {
         ) : (
           <>
             {/* Doctor Profile Header */}
-            <div className="bg-white rounded-3xl p-8 border border-slate-100 shadow-[0_2px_12px_rgba(0,0,0,0.03)] flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+            <div className="clinic-panel bg-white rounded-3xl p-8 border border-slate-100 shadow-[0_2px_12px_rgba(0,0,0,0.03)] flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
               <div className="flex items-center gap-5">
                 <div className="w-18 h-18 rounded-3xl bg-gradient-to-tr from-purple-600 to-indigo-500 text-white font-extrabold text-3xl flex items-center justify-center shadow-lg shadow-purple-500/20">
                   {doctor.fullName.charAt(0)}
@@ -147,17 +150,17 @@ export default function DoctorDetailPage() {
                   {isPatient && (
                     <div className="flex items-center gap-2">
                       <Link
-                        href={`/appointments?doctorId=${doctor.id}`}
+                        href={`/appointments?book=1&doctor=${doctor.id}`}
                         className="px-5 py-4 rounded-2xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs shadow-md shadow-purple-500/20 hover:scale-[1.02] transition flex items-center gap-2"
                       >
-                        <CalendarPlus className="w-4 h-4" />
+
                         <span>Đặt Lịch Khám</span>
                       </Link>
                       <Link
                         href="/chat"
                         className="px-5 py-4 rounded-2xl bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold text-xs border border-purple-200/80 hover:scale-[1.02] transition flex items-center gap-2"
                       >
-                        <MessageSquare className="w-4 h-4" />
+
                         <span>Nhắn Tin</span>
                       </Link>
                     </div>
@@ -166,7 +169,7 @@ export default function DoctorDetailPage() {
             </div>
 
             {/* Tabs Container */}
-            <div className="bg-white rounded-3xl border border-slate-100 shadow-xs overflow-hidden">
+            <div className="clinic-panel bg-white rounded-3xl border border-slate-100 shadow-xs overflow-hidden">
               <div className="flex border-b border-slate-100 px-6 pt-4 gap-6 bg-slate-50/50">
                 <button
                   onClick={() => setActiveTab('schedule')}
@@ -176,7 +179,7 @@ export default function DoctorDetailPage() {
                       : 'border-transparent text-slate-500 hover:text-slate-900'
                   }`}
                 >
-                  <Clock className="w-4 h-4" />
+
                   <span>Lịch Trực Tuần</span>
                 </button>
                 <button
@@ -216,7 +219,6 @@ export default function DoctorDetailPage() {
                           onClick={() => setIsScheduleModalOpen(true)}
                           className="px-4 py-2 rounded-2xl bg-purple-600 text-white font-bold text-xs hover:bg-purple-700 transition flex items-center gap-1.5 shadow-sm"
                         >
-                          <Plus className="w-3.5 h-3.5" />
                           <span>Thêm Ca Trực</span>
                         </button>
                       )}
@@ -299,9 +301,7 @@ export default function DoctorDetailPage() {
                   <div className="space-y-4 text-xs">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center">
-                          <Phone className="w-5 h-5" />
-                        </div>
+
                         <div>
                           <p className="text-slate-400 text-[10px] uppercase font-bold">Số điện thoại</p>
                           <p className="font-bold text-slate-900 text-sm">{doctor.phone || 'Chưa cập nhật'}</p>

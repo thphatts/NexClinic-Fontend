@@ -1,5 +1,7 @@
 'use client';
 
+import { useFeedback } from '@/providers/FeedbackProvider';
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Badge } from '@/components/ui/Badge';
@@ -11,9 +13,10 @@ import { appointmentService } from '@/services/appointmentService';
 import { paymentService } from '@/services/paymentService';
 import { Appointment, Payment } from '@/types/api';
 import { useAuthStore } from '@/store/useAuthStore';
-import { CreditCard, ExternalLink, Search, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 
 export default function PaymentsPage() {
+  const { notify } = useFeedback();
   const { t } = useLanguage();
   const { user } = useAuthStore();
   const [appointments, setAppointments] = useState<Appointment[]>([]);
@@ -75,11 +78,11 @@ export default function PaymentsPage() {
       if (res.paymentUrl) {
         window.location.href = res.paymentUrl;
       } else {
-        alert('Payment ID created: ' + (res.paymentId || res.id));
+        notify('Đã tạo thanh toán: ' + (res.paymentId || res.id));
       }
     } catch (err: unknown) {
       const errorObj = err as { response?: { data?: { message?: string } }; message?: string };
-      alert(errorObj.response?.data?.message || 'Failed to initialize VNPay payment');
+      notify(errorObj.response?.data?.message || 'Không khởi tạo được thanh toán VNPay');
     }
   };
 
@@ -95,15 +98,14 @@ export default function PaymentsPage() {
       <RoleGuard allowedRoles={['ROLE_ADMIN', 'ROLE_STAFF', 'ROLE_PATIENT']}>
         <div className="space-y-6">
           {/* Header Controls */}
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 clinic-panel bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs">
             <div className="relative w-full sm:w-80">
-              <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
               <input
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder={t('searchPaymentPlaceholder')}
-                className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-slate-100 border-none text-xs text-slate-900 placeholder-slate-400 focus:bg-white focus:ring-2 focus:ring-blue-600 focus:outline-none transition"
+                className="w-full pl-4 pr-4 py-2.5 rounded-xl bg-slate-100 border-none text-xs text-slate-900 placeholder-slate-400 focus:bg-white focus:ring-2 focus:ring-blue-600 focus:outline-none transition"
               />
             </div>
 
@@ -111,7 +113,7 @@ export default function PaymentsPage() {
               <div className="flex items-center gap-2 w-full sm:w-auto">
                 <input
                   type="number"
-                  placeholder="Appointment ID..."
+                  placeholder="Mã lịch hẹn…"
                   value={appointmentIdInput}
                   onChange={(e) => setAppointmentIdInput(e.target.value)}
                   className="px-3.5 py-2.5 rounded-xl bg-slate-100 border-none text-xs text-slate-900 focus:ring-2 focus:ring-blue-600 focus:outline-none"
@@ -122,8 +124,8 @@ export default function PaymentsPage() {
                   }}
                   className="px-4 py-2.5 rounded-xl bg-blue-600 text-white font-bold text-xs hover:bg-blue-700 transition flex items-center gap-1.5 shrink-0"
                 >
-                  <ExternalLink className="w-3.5 h-3.5" />
-                  <span>Create VNPay Link</span>
+
+                  <span>Tạo liên kết thanh toán</span>
                 </button>
               </div>
             )}
@@ -136,11 +138,11 @@ export default function PaymentsPage() {
           )}
 
           {/* Payment Table */}
-          <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden">
+          <div className="clinic-panel bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden">
             {loading ? (
               <div className="p-16 flex flex-col items-center justify-center text-slate-400">
                 <Loader2 className="w-8 h-8 animate-spin text-blue-600 mb-2" />
-                <span className="text-xs font-semibold">Loading payment appointments...</span>
+                <span className="text-xs font-semibold">Đang tải thông tin thanh toán…</span>
               </div>
             ) : filtered.length === 0 ? (
               <div className="p-16 text-center text-slate-400 text-xs font-medium">
@@ -151,7 +153,7 @@ export default function PaymentsPage() {
                 <table className="w-full text-left text-xs text-slate-600">
                   <thead className="bg-slate-50 border-b border-slate-100 text-[11px] uppercase tracking-wider font-extrabold text-slate-400">
                     <tr>
-                      <th className="px-6 py-4">Appointment / Order</th>
+                      <th className="px-6 py-4">Lịch hẹn / Giao dịch</th>
                       <th className="px-6 py-4">{t('patientName')}</th>
                       <th className="px-6 py-4">{t('assignedDoctor')}</th>
                       <th className="px-6 py-4">{t('amount')}</th>
@@ -171,10 +173,10 @@ export default function PaymentsPage() {
                           </div>
                         </td>
                         <td className="px-6 py-4">
-                          <p className="font-bold text-slate-900">{apt.patientName || `Patient #${apt.patientId}`}</p>
+                          <p className="font-bold text-slate-900">{apt.patientName || `Bệnh nhân #${apt.patientId}`}</p>
                         </td>
                         <td className="px-6 py-4 text-blue-600 font-semibold">
-                          {apt.doctorName || `Doctor #${apt.doctorId}`}
+                          {apt.doctorName || `Bác sĩ #${apt.doctorId}`}
                         </td>
                         <td className="px-6 py-4 font-extrabold text-slate-900">{formatCurrency(apt.amount)}</td>
                         <td className="px-6 py-4">
@@ -185,7 +187,7 @@ export default function PaymentsPage() {
                             onClick={() => handleVnPayCheckout(apt.id)}
                             className="px-3.5 py-1.5 rounded-xl bg-blue-600 text-white font-bold text-[11px] hover:bg-blue-700 transition inline-flex items-center gap-1.5 shadow-sm"
                           >
-                            <CreditCard className="w-3.5 h-3.5" />
+
                             <span>{t('payWithVnPay')}</span>
                           </button>
                         </td>

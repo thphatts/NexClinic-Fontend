@@ -1,5 +1,7 @@
 'use client';
 
+import { useFeedback } from '@/providers/FeedbackProvider';
+
 import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { AppLayout } from '@/components/layout/AppLayout';
@@ -9,10 +11,11 @@ import { useLanguage } from '@/context/LanguageContext';
 import { formatCurrency } from '@/lib/format';
 import { doctorService, DoctorCreateParams } from '@/services/doctorService';
 import { useAuthStore } from '@/store/useAuthStore';
-import { Search, Plus, Phone, Award, Eye, Trash2, Loader2, CalendarPlus, Stethoscope, Star, MessageSquare } from 'lucide-react';
+import { Trash2, Loader2 } from 'lucide-react';
 import { Doctor } from '@/types/api';
 
 export default function DoctorsPage() {
+  const { notify, confirmAction } = useFeedback();
   const { t } = useLanguage();
   const { hasRole } = useAuthStore();
   const [doctors, setDoctors] = useState<Doctor[]>([]);
@@ -84,20 +87,20 @@ export default function DoctorsPage() {
       fetchDoctors();
     } catch (err: unknown) {
       const errorObj = err as { response?: { data?: { message?: string } }; message?: string };
-      alert(errorObj.response?.data?.message || 'Failed to create doctor profile');
+      notify(errorObj.response?.data?.message || 'Không tạo được hồ sơ bác sĩ');
     } finally {
       setSubmitting(false);
     }
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('Bạn có chắc chắn muốn xóa hồ sơ bác sĩ này?')) return;
+    if (!await confirmAction('Bạn có chắc chắn muốn xóa hồ sơ bác sĩ này?')) return;
     try {
       await doctorService.deleteDoctor(id);
       fetchDoctors();
     } catch (err: unknown) {
       const errorObj = err as { response?: { data?: { message?: string } }; message?: string };
-      alert(errorObj.response?.data?.message || 'Failed to delete doctor');
+      notify(errorObj.response?.data?.message || 'Không xóa được hồ sơ bác sĩ');
     }
   };
 
@@ -105,9 +108,8 @@ export default function DoctorsPage() {
     <AppLayout title={t('doctorsTitle') || 'Danh Mục Bác Sĩ & Chuyên Gia'}>
       <div className="space-y-6">
         {/* Controls Bar */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-5 rounded-3xl border border-slate-100 shadow-xs">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 clinic-panel bg-white p-5 rounded-3xl border border-slate-100 shadow-xs">
           <div className="relative w-full sm:w-80">
-            <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
               type="text"
               value={search}
@@ -116,7 +118,7 @@ export default function DoctorsPage() {
                 setPage(1);
               }}
               placeholder={t('searchDoctorsPlaceholder') || 'Tìm tên bác sĩ hoặc chuyên khoa...'}
-              className="w-full pl-9 pr-4 py-2.5 rounded-2xl bg-slate-50 border border-slate-200/60 text-xs text-slate-900 placeholder-slate-400 focus:bg-white focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 focus:outline-none transition"
+              className="w-full pl-4 pr-4 py-2.5 rounded-2xl bg-slate-50 border border-slate-200/60 text-xs text-slate-900 placeholder-slate-400 focus:bg-white focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 focus:outline-none transition"
             />
           </div>
 
@@ -125,7 +127,6 @@ export default function DoctorsPage() {
               onClick={() => setIsModalOpen(true)}
               className="w-full sm:w-auto px-5 py-2.5 rounded-2xl bg-purple-600 text-white font-bold text-xs hover:bg-purple-700 transition shadow-sm flex items-center justify-center gap-2"
             >
-              <Plus className="w-4 h-4" />
               <span>{t('addNewDoctor') || 'Thêm Bác Sĩ Mới'}</span>
             </button>
           )}
@@ -138,20 +139,20 @@ export default function DoctorsPage() {
         )}
 
         {loading ? (
-          <div className="p-16 flex flex-col items-center justify-center bg-white rounded-3xl border border-slate-100">
+          <div className="p-16 flex flex-col items-center justify-center clinic-panel bg-white rounded-3xl border border-slate-100">
             <Loader2 className="w-8 h-8 animate-spin text-purple-600 mb-2" />
             <span className="text-xs text-slate-400 font-semibold">Đang tải danh sách bác sĩ...</span>
           </div>
         ) : doctors.length === 0 ? (
-          <div className="p-16 text-center text-slate-400 text-xs font-medium bg-white rounded-3xl border border-slate-100">
+          <div className="p-16 text-center text-slate-400 text-xs font-medium clinic-panel bg-white rounded-3xl border border-slate-100">
             Không tìm thấy thông tin bác sĩ phù hợp.
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="stagger-children grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
             {doctors.map((doc) => (
               <div
                 key={doc.id}
-                className="bg-white rounded-3xl p-6 border border-slate-100 shadow-[0_2px_12px_rgba(0,0,0,0.03)] hover:shadow-md hover:border-purple-200/80 transition-all duration-200 flex flex-col justify-between space-y-4"
+                className="clinic-panel bg-white rounded-3xl p-6 border border-slate-100 shadow-[0_2px_12px_rgba(0,0,0,0.03)] hover:shadow-md hover:border-purple-200/80 transition-all duration-200 flex flex-col justify-between space-y-4"
               >
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
@@ -179,14 +180,14 @@ export default function DoctorsPage() {
 
                   <div className="space-y-1.5 pt-2 border-t border-slate-100 text-xs text-slate-600">
                     <p className="flex items-center gap-2">
-                      <Award className="w-3.5 h-3.5 text-purple-500" />
+
                       <span>
                         {doc.experienceYears} năm kinh nghiệm
                       </span>
                     </p>
                     {doc.phone && (
                       <p className="flex items-center gap-2">
-                        <Phone className="w-3.5 h-3.5 text-slate-400" />
+
                         <span>{doc.phone}</span>
                       </p>
                     )}
@@ -204,7 +205,7 @@ export default function DoctorsPage() {
                       href={`/doctors/${doc.id}`}
                       className="px-3 py-2 rounded-xl bg-slate-50 hover:bg-purple-50 text-slate-700 hover:text-purple-700 font-bold text-xs transition flex items-center gap-1 border border-slate-100"
                     >
-                      <Eye className="w-3.5 h-3.5" />
+
                       <span>{t('viewDetails') || 'Chi tiết'}</span>
                     </Link>
                   </div>
@@ -212,17 +213,17 @@ export default function DoctorsPage() {
                   {isPatient && (
                     <div className="grid grid-cols-2 gap-2">
                       <Link
-                        href={`/appointments?doctorId=${doc.id}`}
+                        href={`/appointments?book=1&doctor=${doc.id}`}
                         className="py-2 rounded-xl bg-purple-50 hover:bg-purple-600 text-purple-700 hover:text-white font-bold text-xs transition flex items-center justify-center gap-1.5 border border-purple-200/60 hover:border-transparent shadow-xs"
                       >
-                        <CalendarPlus className="w-3.5 h-3.5" />
+
                         <span>Đặt Khám</span>
                       </Link>
                       <Link
                         href="/chat"
                         className="py-2 rounded-xl bg-slate-50 hover:bg-purple-50 text-slate-700 hover:text-purple-700 font-bold text-xs transition flex items-center justify-center gap-1.5 border border-slate-200/60 shadow-xs"
                       >
-                        <MessageSquare className="w-3.5 h-3.5 text-purple-600" />
+
                         <span>Nhắn Tin</span>
                       </Link>
                     </div>

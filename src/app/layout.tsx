@@ -1,14 +1,12 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import "./globals.css";
 import QueryProvider from "@/providers/QueryProvider";
 import { LanguageProvider } from "@/context/LanguageContext";
-
-const inter = Inter({ subsets: ["latin"] });
+import { FeedbackProvider } from '@/providers/FeedbackProvider';
 
 export const metadata: Metadata = {
-  title: "NexClinic - AI-Powered Clinic Portal",
-  description: "Hệ thống quản lý phòng khám thông minh tích hợp trợ lý y tế AI Gemini",
+  title: "NexClinic — Không gian chăm sóc sức khỏe",
+  description: "Đặt lịch khám, kết nối bác sĩ và theo dõi hồ sơ sức khỏe cùng NexClinic.",
 };
 
 export default function RootLayout({
@@ -17,10 +15,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="vi" className={inter.className}>
-      <body className="min-h-screen bg-slate-50 text-slate-900 antialiased">
+    <html lang="vi">
+      <body className="min-h-screen text-slate-900 antialiased">
         <QueryProvider>
-          <LanguageProvider>{children}</LanguageProvider>
+          <LanguageProvider><FeedbackProvider>{children}</FeedbackProvider></LanguageProvider>
         </QueryProvider>
       </body>
     </html>

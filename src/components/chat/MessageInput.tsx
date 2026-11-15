@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useRef } from "react";
-import { Send } from "lucide-react";
 
 interface MessageInputProps {
   onSend: (content: string) => void;
@@ -51,6 +50,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
     <div className="flex items-end gap-2 p-3.5 border-t border-slate-100 bg-white">
       <textarea
         ref={textareaRef}
+        aria-label="Nội dung tin nhắn"
         value={text}
         onChange={handleInput}
         onKeyDown={handleKeyDown}
@@ -65,7 +65,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
         id="chat-send-btn"
         className="p-2.5 rounded-2xl bg-purple-600 text-white hover:bg-purple-700 active:scale-95 disabled:opacity-40 transition-all shadow-md shadow-purple-600/20 shrink-0"
       >
-        <Send className="w-4 h-4" />
+        <span className="text-xs">Gửi</span>
       </button>
     </div>
   );
