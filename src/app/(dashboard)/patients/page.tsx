@@ -10,11 +10,19 @@ import { Pagination } from '@/components/ui/Pagination';
 import { RoleGuard } from '@/components/auth/RoleGuard';
 import { useLanguage } from '@/context/LanguageContext';
 import { patientService, PatientCreateParams } from '@/services/patientService';
+import { appointmentService } from '@/services/appointmentService';
+import { clinicDate } from '@/lib/clinic-date';
 import { Eye, Edit2, Mail, Trash2, Loader2 } from 'lucide-react';
 import { Patient } from '@/types/api';
+import { PersonLookup } from '@/types/api';
+import { personService } from '@/services/personService';
+import { visitService } from '@/services/visitService';
+import { useQueryClient } from '@tanstack/react-query';
+import { Appointment } from '@/types/api';
 
 export default function PatientsPage() {
   const { notify, confirmAction } = useFeedback();
+  const queryClient = useQueryClient();
   const { t } = useLanguage();
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -31,6 +39,14 @@ export default function PatientsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingPatient, setEditingPatient] = useState<Patient | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [lookupKeyword, setLookupKeyword] = useState('');
+  const [personLookup, setPersonLookup] = useState<PersonLookup | null>(null);
+  const [personNotFound, setPersonNotFound] = useState(false);
+  const [lookupError, setLookupError] = useState('');
+  const [patientProfileData, setPatientProfileData] = useState({ bloodType: '', medicalHistorySummary: '' });
+  const [checkInAppointments, setCheckInAppointments] = useState<Appointment[]>([]);
+  const [selectedAppointmentId, setSelectedAppointmentId] = useState<number | null>(null);
+  const [loadingCheckInAppointments, setLoadingCheckInAppointments] = useState(false);
 
   const [formData, setFormData] = useState<PatientCreateParams>({
     fullName: '',
@@ -77,7 +93,69 @@ export default function PatientsPage() {
       gender: 'MALE',
       address: '',
     });
+    setLookupKeyword('');
+    setPersonLookup(null);
+    setPersonNotFound(false);
+    setLookupError('');
+    setPatientProfileData({ bloodType: '', medicalHistorySummary: '' });
     setIsModalOpen(true);
+  };
+
+  const handlePersonSearch = async () => {
+    setPersonLookup(null);
+    setPersonNotFound(false);
+    setLookupError('');
+    try {
+      const person = await personService.search(lookupKeyword.trim());
+      setPersonLookup(person);
+      setCheckInAppointments([]);
+      setSelectedAppointmentId(null);
+      if (person.profiles.patientId) {
+        setLoadingCheckInAppointments(true);
+        const result = await appointmentService.filterAppointments({ patientId: person.profiles.patientId, size: 100 });
+        const today = clinicDate();
+        const eligible = (result.items || result.content || []).filter((appointment) =>
+          appointment.appointmentDate === today && ['PENDING', 'CONFIRMED'].includes(appointment.status)
+        );
+        setCheckInAppointments(eligible);
+      }
+    } catch (err: unknown) {
+      const error = err as { response?: { status?: number; data?: { message?: string } }; message?: string };
+      if (error.response?.status === 404) setPersonNotFound(true);
+      else setLookupError(error.response?.data?.message || error.message || 'Không tra cứu được Person.');
+    } finally {
+      setLoadingCheckInAppointments(false);
+    }
+  };
+
+  const handleAttachPatientProfile = async () => {
+    if (!personLookup) return;
+    setSubmitting(true);
+    try {
+      await personService.addPatientProfile(personLookup.personId, patientProfileData);
+      setIsModalOpen(false);
+      await fetchPatients();
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } }; message?: string };
+      notify(error.response?.data?.message || error.message || 'Không thể tạo hồ sơ bệnh nhân.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleCheckIn = async (patientId: number, appointmentId: number) => {
+    setSubmitting(true);
+    try {
+      await visitService.checkIn(patientId, appointmentId);
+      await queryClient.invalidateQueries({ queryKey: ['visits', 'active'] });
+      setIsModalOpen(false);
+      notify('Đã mở lượt khám cho bệnh nhân.');
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } }; message?: string };
+      notify(error.response?.data?.message || error.message || 'Không thể mở lượt khám.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleOpenEditModal = (patient: Patient) => {
@@ -269,7 +347,27 @@ export default function PatientsPage() {
           title={editingPatient ? 'Edit Patient Details' : t('registerPatientTitle')}
           subtitle={t('registerPatientSubtitle')}
         >
-          <form onSubmit={handleSubmit} className="space-y-4 text-xs">
+          {!editingPatient && <div className="mb-5 space-y-3 rounded-xl border border-slate-200 p-4">
+            <label htmlFor="person-search" className="block font-semibold text-slate-700">Tra cứu Person theo SĐT hoặc CCCD</label>
+            <div className="flex gap-2">
+              <input id="person-search" value={lookupKeyword} onChange={(event) => setLookupKeyword(event.target.value)} className="min-w-0 flex-1 rounded-xl border border-slate-200 px-3 py-2" placeholder="Nhập số điện thoại hoặc CCCD" />
+              <button type="button" onClick={handlePersonSearch} disabled={!lookupKeyword.trim()} className="btn-secondary disabled:opacity-50">Tìm</button>
+            </div>
+            {lookupError && <p role="alert" className="text-rose-700">{lookupError}</p>}
+            {personNotFound && <p role="status" className="text-slate-600">Chưa có Person khớp. Nhập thông tin bên dưới để tạo Person và Patient.</p>}
+            {personLookup && <div className="space-y-3 rounded-lg bg-slate-50 p-3">
+              <p className="font-semibold text-slate-800">{personLookup.fullName} · {personLookup.phoneNumber || 'Chưa có SĐT'} · {personLookup.citizenId || 'Chưa có CCCD'}</p>
+              {personLookup.profiles.patientId ? <div className="space-y-3"><p className="text-teal-800">Đã có hồ sơ bệnh nhân {personLookup.profiles.patientCode ? `(${personLookup.profiles.patientCode})` : ''}.</p>{loadingCheckInAppointments ? <p className="text-xs text-slate-500">Đang kiểm tra lịch hẹn hôm nay…</p> : checkInAppointments.length === 0 ? <p role="status" className="text-sm text-slate-600">Bệnh nhân chưa có lịch hẹn đủ điều kiện check-in hôm nay.</p> : <div className="flex flex-col gap-3 sm:flex-row sm:items-end"><label className="flex-1 text-xs font-semibold text-slate-700">Chọn lịch hẹn hôm nay<select value={selectedAppointmentId ?? ''} onChange={(event) => setSelectedAppointmentId(event.target.value ? Number(event.target.value) : null)} className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2"><option value="">Chọn lịch hẹn</option>{checkInAppointments.map((appointment) => <option key={appointment.id} value={appointment.id}>#{appointment.id} · {appointment.timeSlot} · {appointment.doctorName || `Bác sĩ #${appointment.doctorId}`} · {appointment.status === 'CONFIRMED' ? 'Đã xác nhận' : 'Chờ xác nhận'}</option>)}</select></label><button type="button" onClick={() => selectedAppointmentId && void handleCheckIn(personLookup.profiles.patientId!, selectedAppointmentId)} disabled={submitting || selectedAppointmentId === null} className="btn-primary disabled:opacity-50">{submitting ? 'Đang mở lượt…' : 'Mở lượt khám (Check-in)'}</button></div>}</div> : <>
+                <p className="text-slate-600">Person này chưa có hồ sơ bệnh nhân. Bổ sung thông tin y tế để gắn hồ sơ.</p>
+                <div className="grid grid-cols-2 gap-2">
+                  <input value={patientProfileData.bloodType} onChange={(event) => setPatientProfileData({ ...patientProfileData, bloodType: event.target.value })} placeholder="Nhóm máu" className="rounded-lg border border-slate-200 px-3 py-2" />
+                  <textarea value={patientProfileData.medicalHistorySummary} onChange={(event) => setPatientProfileData({ ...patientProfileData, medicalHistorySummary: event.target.value })} placeholder="Tiền sử bệnh" className="rounded-lg border border-slate-200 px-3 py-2" />
+                </div>
+                <button type="button" onClick={handleAttachPatientProfile} disabled={submitting} className="btn-primary disabled:opacity-50">{submitting ? 'Đang tạo…' : 'Tạo hồ sơ Patient'}</button>
+              </>}
+            </div>}
+          </div>}
+          {(editingPatient || personNotFound) && <form onSubmit={handleSubmit} className="space-y-4 text-xs">
             <div>
               <label className="block font-semibold text-slate-700 mb-1">{t('fullName')}</label>
               <input
@@ -369,7 +467,7 @@ export default function PatientsPage() {
                 <span>{t('save')}</span>
               </button>
             </div>
-          </form>
+          </form>}
         </Modal>
       </RoleGuard>
     </AppLayout>
