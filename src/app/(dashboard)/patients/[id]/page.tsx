@@ -11,6 +11,10 @@ import { appointmentService } from '@/services/appointmentService';
 import { Patient, MedicalRecord, Appointment } from '@/types/api';
 import { Badge } from '@/components/ui/Badge';
 import { ArrowLeft, Loader2 } from 'lucide-react';
+import { Modal } from '@/components/ui/Modal';
+import { useQuery } from '@tanstack/react-query';
+import { patientHistoryService } from '@/services/patientHistoryService';
+import { Line, LineChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 
 export default function PatientDetailPage() {
   const params = useParams();
@@ -21,7 +25,10 @@ export default function PatientDetailPage() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'records' | 'appointments'>('records');
+  const [activeTab, setActiveTab] = useState<'records' | 'visits' | 'appointments'>('records');
+  const [trendConceptId, setTrendConceptId] = useState<number | null>(null);
+  const visitHistory = useQuery({ queryKey: ['patients', patientId, 'visits'], queryFn: () => patientHistoryService.getVisits(patientId), enabled: !!patientId });
+  const trend = useQuery({ queryKey: ['patients', patientId, 'obs-trend', trendConceptId], queryFn: () => patientHistoryService.getObservationTrend(patientId, trendConceptId!), enabled: trendConceptId !== null });
 
   const fetchData = useCallback(async () => {
     if (!patientId) return;
@@ -157,6 +164,10 @@ export default function PatientDetailPage() {
                     <span>Medical Records ({medicalRecords.length})</span>
                   </button>
                   <button
+                    onClick={() => setActiveTab('visits')}
+                    className={`pb-3 text-xs font-bold transition border-b-2 ${activeTab === 'visits' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500'}`}
+                  >Lượt khám ({visitHistory.data?.length || 0})</button>
+                  <button
                     onClick={() => setActiveTab('appointments')}
                     className={`pb-3 text-xs font-bold transition border-b-2 flex items-center gap-2 ${
                       activeTab === 'appointments'
@@ -215,12 +226,17 @@ export default function PatientDetailPage() {
                       )}
                     </div>
                   )}
+
+                  {activeTab === 'visits' && (visitHistory.isLoading ? <div className="flex justify-center p-8"><Loader2 className="h-5 w-5 animate-spin" /></div> : visitHistory.isError ? <p role="alert" className="text-sm text-rose-700">Không tải được lịch sử Visit. <button onClick={() => void visitHistory.refetch()} className="underline">Thử lại</button></p> : !visitHistory.data?.length ? <p className="text-sm text-slate-500">Chưa có Visit.</p> : <div className="space-y-5">{visitHistory.data.map((visit) => <article key={visit.visitId} className="border-l-2 border-teal-200 pl-4"><div className="flex flex-wrap items-center justify-between gap-2"><div><h3 className="font-semibold">Visit #{visit.visitId} · {visit.status === 'COMPLETED' ? 'Hoàn tất' : 'Đang khám'}</h3><p className="text-xs text-slate-500">{new Date(visit.startTime).toLocaleString('vi-VN')}</p></div>{visit.appointmentId && <span className="text-xs text-slate-400">Lịch #{visit.appointmentId}</span>}</div><div className="mt-3 space-y-3">{visit.encounters.map((encounter) => <section key={encounter.encounterId} className="rounded-lg bg-slate-50 p-3"><div className="flex justify-between gap-3"><p className="text-sm font-medium">{encounter.encounterType === 'VITALS' ? 'Sinh hiệu' : encounter.encounterType === 'CONSULTATION' ? 'Khám lâm sàng' : encounter.encounterType}</p><span className="text-xs text-slate-400">{new Date(encounter.encounterDatetime).toLocaleString('vi-VN')}</span></div><div className="mt-2 space-y-1">{encounter.observations.map((observation) => <div key={observation.obsId} className="flex flex-wrap items-center justify-between gap-2 text-xs"><span>{observation.conceptName}: <strong>{observation.valueNumeric ?? observation.valueText ?? observation.valueCodedName ?? observation.valueDatetime ?? (observation.valueBoolean == null ? '—' : observation.valueBoolean ? 'Có' : 'Không')} {observation.unit || ''}</strong></span>{observation.dataType === 'NUMERIC' && <button onClick={() => setTrendConceptId(observation.conceptId)} className="text-teal-800 underline">Biểu đồ xu hướng</button>}</div>)}</div></section>)}</div></article>)}</div>)}
                 </div>
               </div>
             </>
           )}
         </div>
       </RoleGuard>
+      <Modal isOpen={trendConceptId !== null} onClose={() => setTrendConceptId(null)} title="Biểu đồ xu hướng" subtitle={trend.data?.[0]?.conceptName} maxWidth="lg">
+        {trend.isLoading ? <div className="flex justify-center p-10"><Loader2 className="h-5 w-5 animate-spin" /></div> : trend.isError ? <p role="alert" className="text-sm text-rose-700">Không tải được dữ liệu biểu đồ.</p> : !trend.data?.length ? <p className="p-8 text-center text-sm text-slate-500">Chưa có dữ liệu đo theo thời gian.</p> : <div className="h-72 w-full"><ResponsiveContainer width="100%" height="100%"><LineChart data={trend.data}><CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="observedAt" tickFormatter={(value: string) => new Date(value).toLocaleDateString('vi-VN')} /><YAxis /><Tooltip labelFormatter={(value) => new Date(String(value)).toLocaleString('vi-VN')} formatter={(value) => [`${value} ${trend.data?.[0]?.unit || ''}`, trend.data?.[0]?.conceptName || 'Giá trị']} /><Line type="monotone" dataKey="value" stroke="#0f766e" strokeWidth={2} dot /></LineChart></ResponsiveContainer></div>}
+      </Modal>
     </AppLayout>
   );
 }

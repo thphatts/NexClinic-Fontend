@@ -16,7 +16,7 @@ export interface PagedResponse<T> {
   isLast: boolean;
 }
 
-export type Role = 'ROLE_ADMIN' | 'ROLE_DOCTOR' | 'ROLE_STAFF' | 'ROLE_PATIENT';
+export type Role = 'ROLE_ADMIN' | 'ROLE_DOCTOR' | 'ROLE_STAFF' | 'ROLE_RECEPTIONIST' | 'ROLE_NURSE' | 'ROLE_PATIENT';
 export type Gender = 'MALE' | 'FEMALE' | 'OTHER';
 export type AppointmentStatus = 'PENDING' | 'CONFIRMED' | 'COMPLETED' | 'CANCELLED';
 export type PaymentStatus = 'PENDING' | 'SUCCESS' | 'FAILED' | 'REFUNDED';
@@ -56,6 +56,103 @@ export interface Patient {
   userId?: string;
   createdAt?: string;
   updatedAt?: string;
+}
+
+export interface PersonLookup {
+  personId: number;
+  fullName: string;
+  dob?: string;
+  gender?: string;
+  phoneNumber?: string;
+  citizenId?: string;
+  address?: string;
+  profiles: {
+    patientId: number | null;
+    patientCode: string | null;
+    doctorId: number | null;
+    hasUserAccount: boolean;
+  };
+}
+
+export type VisitStatus = 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
+export type EncounterType = 'VITALS' | 'CONSULTATION' | 'LAB_RESULT' | 'DISCHARGE';
+
+export interface ActiveVisit {
+  visitId: number;
+  patientId: number;
+  patientName: string;
+  appointmentId: number | null;
+  visitType: string;
+  startTime: string;
+  encounters: EncounterType[];
+}
+
+export interface VisitHistory {
+  visitId: number;
+  appointmentId: number | null;
+  visitType: string;
+  status: VisitStatus;
+  startTime: string;
+  endTime?: string;
+  encounters: {
+    encounterId: number;
+    encounterType: EncounterType;
+    encounterDatetime: string;
+    doctorName?: string;
+    observations: {
+      obsId: number;
+      conceptId: number;
+      conceptName: string;
+      unit?: string;
+      dataType: ConceptDataType;
+      valueNumeric?: number;
+      valueText?: string;
+      valueCodedId?: number;
+      valueCodedName?: string;
+      valueDatetime?: string;
+      valueBoolean?: boolean;
+      observedAt: string;
+    }[];
+  }[];
+}
+
+export interface ObservationTrend {
+  conceptId: number;
+  conceptName: string;
+  unit?: string;
+  value: number;
+  observedAt: string;
+}
+
+export type ConceptDataType = 'NUMERIC' | 'TEXT' | 'CODED' | 'BOOLEAN' | 'DATETIME';
+export interface ConceptDictionaryItem {
+  conceptId: number;
+  name: string;
+  dataType: ConceptDataType;
+  conceptClass: string;
+  unit?: string | null;
+  minValue?: number | null;
+  maxValue?: number | null;
+  required: boolean;
+  answers: { answerConceptId: number; name: string }[];
+}
+export interface ObsRequest {
+  conceptId: number;
+  valueNumeric: number | null;
+  valueText: string | null;
+  valueCodedId: number | null;
+  valueDatetime: string | null;
+  valueBoolean: boolean | null;
+}
+
+export interface Visit {
+  id: number;
+  patient: Patient;
+  appointmentId: number | null;
+  visitType: string;
+  status: VisitStatus;
+  startTime: string;
+  endTime?: string;
 }
 
 export interface Doctor {

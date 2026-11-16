@@ -3,6 +3,7 @@ import type { Role } from '@/types/api';
 export const navigation: { label: string; href: string; group: string; description: string; roles?: Role[] }[] = [
   { label: 'Tổng quan', href: '/dashboard', group: 'Không gian làm việc', description: 'Một ngày mới, mọi việc trong tầm tay.' },
   { label: 'Lịch hẹn', href: '/appointments', group: 'Chăm sóc', description: 'Sắp xếp lịch khám, dành thời gian cho sức khỏe.' },
+  { label: 'Đang khám', href: '/visits', group: 'Chăm sóc', description: 'Theo dõi lượt khám đang mở tại phòng khám.', roles: ['ROLE_ADMIN', 'ROLE_RECEPTIONIST', 'ROLE_STAFF', 'ROLE_DOCTOR'] },
   { label: 'Bác sĩ', href: '/doctors', group: 'Chăm sóc', description: 'Tìm người đồng hành phù hợp với nhu cầu của bạn.' },
   { label: 'Bệnh nhân', href: '/patients', group: 'Chăm sóc', description: 'Thông tin cần thiết để chăm sóc từng người tốt hơn.', roles: ['ROLE_ADMIN', 'ROLE_DOCTOR', 'ROLE_STAFF'] },
   { label: 'Hồ sơ bệnh án', href: '/medical-records', group: 'Chăm sóc', description: 'Theo dõi từng bước trong hành trình điều trị.', roles: ['ROLE_ADMIN', 'ROLE_DOCTOR', 'ROLE_PATIENT'] },
@@ -16,5 +17,5 @@ export const navigation: { label: string; href: string; group: string; descripti
 ];
 
 export const roleLabels: Record<string, string> = {
-  ROLE_ADMIN: 'Quản trị viên', ROLE_DOCTOR: 'Bác sĩ', ROLE_STAFF: 'Lễ tân', ROLE_PATIENT: 'Bệnh nhân',
+  ROLE_ADMIN: 'Quản trị viên', ROLE_DOCTOR: 'Bác sĩ', ROLE_STAFF: 'Lễ tân', ROLE_RECEPTIONIST: 'Lễ tân', ROLE_NURSE: 'Điều dưỡng', ROLE_PATIENT: 'Bệnh nhân',
 };

@@ -7,6 +7,7 @@ import { roleLabels } from '@/lib/navigation';
 import { useState } from 'react';
 import { AppointmentUpdates } from '@/components/appointments/AppointmentUpdates';
 import { useRouter } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface HeaderProps { title?: string; onMobileMenuToggle?: () => void; mobileOpen?: boolean }
 
@@ -15,9 +16,10 @@ export function Header({ title, onMobileMenuToggle, mobileOpen }: HeaderProps) {
   const [leaving, setLeaving] = useState(false);
   const [updatesOpen, setUpdatesOpen] = useState(false);
   const router = useRouter();
+  const queryClient = useQueryClient();
   const handleLogout = async () => {
     setLeaving(true);
-    try { await authService.logout(); } finally { logout(); router.replace('/login'); }
+    try { await authService.logout(); } finally { queryClient.clear(); logout(); router.replace('/login'); }
   };
   return <header className="clinic-header">
     <div className="flex min-w-0 items-center gap-3">
