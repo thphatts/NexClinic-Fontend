@@ -1,37 +1,148 @@
-
 name: NexClinic Frontend CI/CD Pipeline
 
 on:
   push:
-    branches: [ main, dev ]
+    branches: [main, dev, ci/frontend-ec2]
   pull_request:
-    branches: [ main ]
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: frontend-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  lint-typecheck-build:
-    name: Lint, TypeCheck & Build Verification
+  verify:
+    name: Lint, types and deployment regression tests
     runs-on: ubuntu-latest
-
+    timeout-minutes: 15
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js 20
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: 20
-          cache: 'npm'
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx tsc --noEmit
+      - run: npm run lint
+      - run: bash -n deploy/ec2-frontend-deploy.sh
+      - run: docker run --rm -v "$PWD:/src" koalaman/shellcheck:v0.10.0 /src/deploy/ec2-frontend-deploy.sh
+      - run: python3 -m unittest discover -s scripts -p 'test_*.py'
 
-      - name: Install Dependencies
-        run: npm ci
+  image:
+    name: Build and smoke-test frontend image
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build production image on runner
+        run: docker build --build-arg REVISION="$GITHUB_SHA" --build-arg NEXT_PUBLIC_API_BASE_URL=/api/v1 -t nexclinic-frontend:ci .
+      - name: Verify pages and bundled assets in the runtime image
+        run: |
+          docker run -d --name frontend-smoke -p 127.0.0.1:13000:3000 nexclinic-frontend:ci
+          trap 'docker logs frontend-smoke; docker rm -f frontend-smoke' EXIT
+          for attempt in {1..40}; do
+            if curl -fsS http://127.0.0.1:13000/ -o /tmp/frontend.html; then break; fi
+            sleep 2
+          done
+          python3 scripts/smoke_frontend.py http://127.0.0.1:13000 "$GITHUB_SHA"
+          test "$(docker inspect --format '{{.Config.User}}' frontend-smoke)" = nextjs
+      - run: docker save nexclinic-frontend:ci -o /tmp/frontend-image.tar
+      - uses: actions/upload-artifact@v4
+        with:
+          name: frontend-image
+          path: /tmp/frontend-image.tar
+          retention-days: 2
 
-      - name: Run TypeScript Type Check
-        run: npx tsc --noEmit
-
-      - name: Run ESLint
-        run: npm run lint
-
-      - name: Test Next.js Production Build
+  publish:
+    name: Publish tested frontend to GHCR
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    needs: image
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      image: ${{ steps.publish.outputs.image }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: frontend-image
+          path: /tmp
+      - name: Push the image verified by smoke tests
+        id: publish
         env:
-          NEXT_PUBLIC_API_BASE_URL: https://ai-powered-clinic-portal.onrender.com/api/v1
-        run: npm run build
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          image="ghcr.io/${GITHUB_REPOSITORY,,}"
+          printf '%s' "$GHCR_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+          docker load -i /tmp/frontend-image.tar
+          docker tag nexclinic-frontend:ci "$image:$GITHUB_SHA"
+          docker push "$image:$GITHUB_SHA"
+          repo_digests=$(docker inspect --format '{{range .RepoDigests}}{{println .}}{{end}}' "$image:$GITHUB_SHA")
+          digest=''
+          while IFS= read -r candidate; do
+            if [[ "$candidate" == "$image@"* ]]; then
+              digest="${candidate#"$image@"}"
+              break
+            fi
+          done <<< "$repo_digests"
+          [[ "$digest" =~ ^sha256:[a-f0-9]{64}$ ]] || { echo 'Missing published GHCR digest' >&2; exit 1; }
+          echo "image=$image@$digest" >> "$GITHUB_OUTPUT"
+
+  deploy:
+    name: Deploy frontend to EC2 with rollback
+    needs: publish
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: production
+    permissions:
+      contents: read
+      packages: read
+    env:
+      EC2_HOST: ${{ secrets.EC2_HOST }}
+      EC2_USER: ${{ secrets.EC2_USER }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate deployment secrets and configure SSH
+        env:
+          EC2_KNOWN_HOSTS: ${{ secrets.EC2_KNOWN_HOSTS }}
+          EC2_SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+        run: |
+          for name in EC2_HOST EC2_USER EC2_KNOWN_HOSTS EC2_SSH_PRIVATE_KEY; do
+            value="${!name}"
+            [[ -n "${value//[[:space:]]/}" ]] || { echo "::error::Missing $name in this FE repository's production environment"; exit 1; }
+          done
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$EC2_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          printf '%s\n' "$EC2_SSH_PRIVATE_KEY" > ~/.ssh/ec2_key
+          chmod 600 ~/.ssh/known_hosts ~/.ssh/ec2_key
+          cat > ~/.ssh/config <<'EOF'
+          Host *
+            BatchMode yes
+            IdentitiesOnly yes
+            ConnectTimeout 15
+            ConnectionAttempts 1
+            ServerAliveInterval 15
+            ServerAliveCountMax 2
+          EOF
+          chmod 600 ~/.ssh/config
+      - name: Upload frontend deployment files
+        run: |
+          scp -i ~/.ssh/ec2_key -o StrictHostKeyChecking=yes deploy/frontend.compose.yml deploy/ec2-frontend-deploy.sh "$EC2_USER@$EC2_HOST:/tmp/"
+          ssh -i ~/.ssh/ec2_key -o StrictHostKeyChecking=yes "$EC2_USER@$EC2_HOST" \
+            'sudo -n install -d -m 0750 /opt/nexclinic && sudo -n install -m 0644 /tmp/frontend.compose.yml /opt/nexclinic/frontend.compose.yml && sudo -n install -m 0750 /tmp/ec2-frontend-deploy.sh /opt/nexclinic/ec2-frontend-deploy.sh'
+      - name: Deploy by digest and verify the served revision
+        env:
+          IMAGE: ${{ needs.publish.outputs.image }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          [[ "$IMAGE" =~ ^ghcr\.io/[a-z0-9._/-]+@sha256:[a-f0-9]{64}$ ]] || { echo 'Invalid frontend image'; exit 1; }
+          printf '%s' "$GHCR_TOKEN" | ssh -i ~/.ssh/ec2_key -o StrictHostKeyChecking=yes "$EC2_USER@$EC2_HOST" \
+            "sudo -n /opt/nexclinic/ec2-frontend-deploy.sh '$IMAGE' '$GITHUB_ACTOR'"
