@@ -74,16 +74,21 @@ jobs:
         with:
           name: frontend-image
           path: /tmp
-      - name: Push the image verified by smoke tests
-        id: publish
+      - name: Log in to GHCR
         env:
           GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: printf '%s' "$GHCR_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+      - name: Load and tag the image verified by smoke tests
         run: |
           image="ghcr.io/${GITHUB_REPOSITORY,,}"
-          printf '%s' "$GHCR_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
           docker load -i /tmp/frontend-image.tar
           docker tag nexclinic-frontend:ci "$image:$GITHUB_SHA"
-          docker push "$image:$GITHUB_SHA"
+      - name: Push tested image to GHCR
+        run: docker push "ghcr.io/${GITHUB_REPOSITORY,,}:$GITHUB_SHA"
+      - name: Export the GHCR digest for deployment
+        id: publish
+        run: |
+          image="ghcr.io/${GITHUB_REPOSITORY,,}"
           repo_digests=$(docker inspect --format '{{range .RepoDigests}}{{println .}}{{end}}' "$image:$GITHUB_SHA")
           digest=''
           while IFS= read -r candidate; do
