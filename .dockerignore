@@ -1,0 +1,13 @@
+.git
+.github
+node_modules
+.next
+.env*
+*.pem
+*.key
+*.bak
+*.tsbuildinfo
+npm-debug.log*
+deploy
+scripts
+docs

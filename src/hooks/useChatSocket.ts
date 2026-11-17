@@ -9,7 +9,8 @@ const getWsBaseUrl = (): string => {
   if (typeof window === 'undefined') return 'http://localhost:8080';
   if (process.env.NEXT_PUBLIC_API_BASE_URL) {
     // Xoá /api/v1 ở cuối nếu có
-    return process.env.NEXT_PUBLIC_API_BASE_URL.replace(/\/api\/v1\/?$/, '');
+    return new URL(process.env.NEXT_PUBLIC_API_BASE_URL, window.location.origin)
+      .href.replace(/\/api\/v1\/?$/, '');
   }
   if (!window.location.hostname.includes('localhost') && !window.location.hostname.includes('127.0.0.1')) {
     return 'https://ai-powered-clinic-portal.onrender.com';
