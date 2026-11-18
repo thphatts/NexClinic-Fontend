@@ -10,6 +10,7 @@ export const navigation: { label: string; href: string; group: string; descripti
   { label: 'Đơn thuốc', href: '/prescriptions', group: 'Chăm sóc', description: 'Tra cứu hướng dẫn và thông tin sử dụng thuốc.', roles: ['ROLE_ADMIN', 'ROLE_DOCTOR', 'ROLE_STAFF'] },
   { label: 'Tin nhắn', href: '/chat', group: 'Kết nối', description: 'Giữ kết nối với người chăm sóc sức khỏe của bạn.', roles: ['ROLE_ADMIN', 'ROLE_DOCTOR', 'ROLE_PATIENT'] },
   { label: 'Trợ lý NexAI', href: '/ai', group: 'Kết nối', description: 'Thêm một góc nhìn để chuẩn bị tốt hơn cho buổi khám.' },
+  { label: 'Ca trực bác sĩ', href: '/doctor-schedules', group: 'Quản lý', description: 'Xem và quản lý ca trực hằng tuần của bác sĩ.', roles: ['ROLE_ADMIN'] },
   { label: 'Kho thuốc', href: '/products', group: 'Quản lý', description: 'Danh mục thuốc và vật tư của phòng khám.', roles: ['ROLE_ADMIN', 'ROLE_DOCTOR', 'ROLE_STAFF'] },
   { label: 'Thanh toán', href: '/payments', group: 'Quản lý', description: 'Theo dõi chi phí và thanh toán lịch khám.', roles: ['ROLE_ADMIN', 'ROLE_STAFF', 'ROLE_PATIENT'] },
   { label: 'Tài khoản', href: '/users', group: 'Quản lý', description: 'Quản lý thành viên và quyền truy cập.', roles: ['ROLE_ADMIN'] },

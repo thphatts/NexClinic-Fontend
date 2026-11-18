@@ -22,6 +22,15 @@ class DeployTests(unittest.TestCase):
             for name, body in {
                 'flock': '#!/bin/sh\nexit 0\n',
                 'sleep': '#!/bin/sh\nexit 0\n',
+                'curl': '''#!/bin/sh
+printf 'curl %s\\n' "$*" >> "$DEPLOY_DIR/commands"
+[ "$MODE" != tls_failure ] || exit 60
+[ "$MODE" != homepage_failure ] || exit 22
+case "$*" in
+  *"release.txt"*)
+    if [ "$MODE" = wrong_revision ]; then echo old-revision; else echo "$REVISION"; fi ;;
+esac
+''',
                 'docker': '''#!/bin/sh
 printf '%s\\n' "$*" >> "$DEPLOY_DIR/commands"
 case "$*" in
@@ -34,8 +43,6 @@ case "$*" in
     if [ "$FRONTEND_IMAGE" != nexclinic-frontend:rollback ] && [ "$MODE" = health_failure ]; then exit 1; fi ;;
   *"nginx -s reload"*)
     if [ "$FRONTEND_IMAGE" != nexclinic-frontend:rollback ] && [ "$MODE" = reload_failure ]; then exit 1; fi ;;
-  *"release.txt"*)
-    if [ "$MODE" = wrong_revision ]; then echo old-revision; else echo "$REVISION"; fi ;;
 esac
 ''',
             }.items():
@@ -43,7 +50,8 @@ esac
                 path.write_text(body)
                 path.chmod(0o755)
             env = dict(os.environ, DEPLOY_DIR=tmp, STACK_DIR=tmp,
-                       PATH=str(bin_dir) + ':' + os.environ['PATH'], MODE=mode, REVISION=REVISION)
+                       PATH=str(bin_dir) + ':' + os.environ['PATH'], MODE=mode, REVISION=REVISION,
+                       FRONTEND_HOST='portal.example.test')
             result = subprocess.run(['bash', str(SCRIPT), image], env=env, capture_output=True, text=True)
             commands = root / 'commands'
             release = root / 'frontend-release.env'
@@ -57,6 +65,13 @@ esac
         self.assertIn('--no-build --pull never --no-deps --wait', commands)
         self.assertIn('nginx -s reload', commands)
         self.assertNotIn('down', commands)
+        self.assertIn('--resolve portal.example.test:443:127.0.0.1', commands)
+        self.assertIn('https://portal.example.test/', commands)
+        self.assertIn('https://portal.example.test/release.txt', commands)
+        self.assertIn('--noproxy *', commands)
+        self.assertNotIn('proxy wget', commands)
+        self.assertNotIn('--insecure', commands)
+        self.assertNotIn('--no-check-certificate', commands)
 
     def test_configuration_and_pull_failure_do_not_replace_container(self):
         for mode in ('config_failure', 'pull_failure'):
@@ -67,7 +82,7 @@ esac
                 self.assertEqual('', release)
 
     def test_failure_restores_previous_image_and_reloads_proxy(self):
-        for mode in ('health_failure', 'reload_failure', 'wrong_revision'):
+        for mode in ('health_failure', 'reload_failure', 'wrong_revision', 'tls_failure', 'homepage_failure'):
             with self.subTest(mode=mode):
                 result, commands, release = self.rollout(mode)
                 self.assertNotEqual(0, result.returncode)

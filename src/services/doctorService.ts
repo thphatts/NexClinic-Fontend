@@ -93,6 +93,11 @@ export const doctorService = {
     return getResponseData<DoctorSchedule>(res);
   },
 
+  async updateSchedule(doctorId: number, scheduleId: number, data: DoctorScheduleCreateParams): Promise<DoctorSchedule> {
+    const res = await apiClient.put<ApiResponse<DoctorSchedule>>(`/doctors/${doctorId}/schedules/${scheduleId}`, data);
+    return getResponseData<DoctorSchedule>(res);
+  },
+
   async deleteSchedule(doctorId: number, scheduleId: number): Promise<string> {
     const res = await apiClient.delete<ApiResponse<string>>(`/doctors/${doctorId}/schedules/${scheduleId}`);
     return getResponseData<string>(res);

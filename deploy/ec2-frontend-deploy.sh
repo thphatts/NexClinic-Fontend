@@ -3,8 +3,10 @@ set -Eeuo pipefail
 
 DEPLOY_DIR="${DEPLOY_DIR:-/opt/nexclinic}"
 STACK_DIR="${STACK_DIR:-/home/ubuntu/clinic-portal-deploy}"
+FRONTEND_HOST="${FRONTEND_HOST:-nexclinic.duckdns.org}"
 IMAGE="${1:?Usage: ec2-frontend-deploy.sh ghcr.io/owner/repo@sha256:digest}"
 [[ "$IMAGE" =~ ^ghcr\.io/[a-z0-9._/-]+@sha256:[a-f0-9]{64}$ ]] || { echo 'Invalid frontend GHCR digest' >&2; exit 1; }
+command -v curl >/dev/null || { echo 'curl is required for the frontend HTTPS check' >&2; exit 1; }
 
 exec 9>"$DEPLOY_DIR/frontend-deploy.lock"
 flock -n 9 || { echo 'Another frontend deployment is running' >&2; exit 1; }
@@ -43,6 +45,12 @@ reload_proxy() {
   compose exec -T proxy nginx -s reload
 }
 
+probe_frontend() {
+  # Connect to local Nginx using the certificate hostname for SNI and verification.
+  curl --fail --silent --show-error --noproxy '*' --connect-timeout 5 --max-time 10 \
+    --resolve "$FRONTEND_HOST:443:127.0.0.1" "$@"
+}
+
 rollback() {
   local result=$?
   trap - ERR
@@ -61,8 +69,8 @@ trap rollback ERR
 compose up -d --no-build --pull never --no-deps --wait --wait-timeout 120 frontend
 reload_proxy
 for ((attempt=0; attempt<10; attempt++)); do
-  if compose exec -T proxy wget -q -T 5 -O /dev/null http://127.0.0.1/ &&
-    [[ "$(compose exec -T proxy wget -q -T 5 -O - http://127.0.0.1/release.txt)" == "$REVISION" ]]; then
+  if probe_frontend -o /dev/null "https://$FRONTEND_HOST/" &&
+    [[ "$(probe_frontend "https://$FRONTEND_HOST/release.txt")" == "$REVISION" ]]; then
     printf 'FRONTEND_IMAGE=%s\n' "$IMAGE" > "$DEPLOY_DIR/frontend-release.env"
     trap - ERR
     printf 'Frontend deployed: %s\n' "$IMAGE"
@@ -70,5 +78,5 @@ for ((attempt=0; attempt<10; attempt++)); do
   fi
   sleep 2
 done
-echo 'Frontend is not responding through Nginx' >&2
+echo 'Frontend HTTPS/revision check failed through Nginx' >&2
 false
