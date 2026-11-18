@@ -70,8 +70,12 @@ export default function UsersPage() {
       });
       fetchUsers();
     } catch (err: unknown) {
-      const errorObj = err as { response?: { data?: { message?: string } }; message?: string };
-      notify(errorObj.response?.data?.message || 'Không tạo được tài khoản');
+      const errorObj = err as {
+        response?: { data?: { message?: string; result?: Record<string, string> } };
+        message?: string;
+      };
+      const validationMessage = Object.values(errorObj.response?.data?.result || {}).join(', ');
+      notify(validationMessage || errorObj.response?.data?.message || errorObj.message || 'Không tạo được tài khoản');
     } finally {
       setSubmitting(false);
     }
@@ -205,6 +209,20 @@ export default function UsersPage() {
                 placeholder="Nguyễn Văn An"
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-600 focus:outline-none"
               />
+            </div>
+            <div>
+              <label className="block font-semibold text-slate-700 mb-1">Số điện thoại (không bắt buộc)</label>
+              <input
+                type="tel"
+                autoComplete="tel"
+                value={formData.phone || ''}
+                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                placeholder="Số trùng với hồ sơ bác sĩ/bệnh nhân cần liên kết"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-600 focus:outline-none"
+              />
+              <p className="mt-1 text-[11px] text-slate-500">
+                Nhập đúng số điện thoại trong hồ sơ để tài khoản dùng chung hồ sơ đó.
+              </p>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>

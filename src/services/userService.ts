@@ -19,7 +19,12 @@ export const userService = {
   },
 
   async createUser(data: UserCreateParams): Promise<string> {
-    const res = await apiClient.post<ApiResponse<string>>('/users', data);
+    const res = await apiClient.post<ApiResponse<string>>('/users', {
+      ...data,
+      phone: data.phone?.trim() || undefined,
+      address: data.address?.trim() || undefined,
+      citizenId: data.citizenId?.trim() || undefined,
+    });
     return getResponseData<string>(res);
   },
 
