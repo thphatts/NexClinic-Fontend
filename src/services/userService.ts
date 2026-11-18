@@ -8,7 +8,7 @@ export interface UserCreateParams {
   password?: string;
   phone?: string;
   address?: string;
-  citizenId?: string;
+  citizenId: string;
   role?: string;
 }
 
@@ -23,7 +23,7 @@ export const userService = {
       ...data,
       phone: data.phone?.trim() || undefined,
       address: data.address?.trim() || undefined,
-      citizenId: data.citizenId?.trim() || undefined,
+      citizenId: data.citizenId.trim(),
     });
     return getResponseData<string>(res);
   },

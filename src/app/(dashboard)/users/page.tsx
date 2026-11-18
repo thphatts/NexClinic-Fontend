@@ -224,6 +224,21 @@ export default function UsersPage() {
                 Nhập đúng số điện thoại trong hồ sơ để tài khoản dùng chung hồ sơ đó.
               </p>
             </div>
+            <div>
+              <label className="block font-semibold text-slate-700 mb-1">Căn cước công dân *</label>
+              <input
+                required
+                type="text"
+                inputMode="numeric"
+                maxLength={12}
+                pattern="[0-9]{12}"
+                title="CCCD phải gồm đúng 12 chữ số"
+                value={formData.citizenId || ''}
+                onChange={(e) => setFormData({ ...formData, citizenId: e.target.value })}
+                placeholder="12 chữ số"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-600 focus:outline-none"
+              />
+            </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block font-semibold text-slate-700 mb-1">{t('username')}</label>
