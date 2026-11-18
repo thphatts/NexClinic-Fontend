@@ -8,7 +8,7 @@ export interface UserCreateParams {
   password?: string;
   phone?: string;
   address?: string;
-  citizenId?: string;
+  citizenId: string;
   role?: string;
 }
 
@@ -19,7 +19,12 @@ export const userService = {
   },
 
   async createUser(data: UserCreateParams): Promise<string> {
-    const res = await apiClient.post<ApiResponse<string>>('/users', data);
+    const res = await apiClient.post<ApiResponse<string>>('/users', {
+      ...data,
+      phone: data.phone?.trim() || undefined,
+      address: data.address?.trim() || undefined,
+      citizenId: data.citizenId.trim(),
+    });
     return getResponseData<string>(res);
   },
 
