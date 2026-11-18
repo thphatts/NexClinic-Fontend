@@ -12,8 +12,8 @@ const fields = [
   { name: 'username', label: 'Tên đăng nhập', type: 'text', required: true, auto: 'username' },
   { name: 'email', label: 'Email', type: 'email', required: true, auto: 'email' },
   { name: 'password', label: 'Mật khẩu (ít nhất 6 ký tự)', type: 'password', required: true, auto: 'new-password' },
-  { name: 'phone', label: 'Số điện thoại', type: 'tel', auto: 'tel' },
-  { name: 'dob', label: 'Ngày sinh', type: 'date', auto: 'bday' },
+  { name: 'phone', label: 'Số điện thoại', type: 'tel', required: true, auto: 'tel' },
+  { name: 'dob', label: 'Ngày sinh', type: 'date', required: true, auto: 'bday' },
   { name: 'citizenId', label: 'Căn cước công dân', type: 'text', required: true, auto: 'off' },
   { name: 'address', label: 'Địa chỉ', type: 'text', auto: 'street-address' },
 ] as const;
@@ -26,11 +26,13 @@ export default function RegisterPage() {
   const router = useRouter();
   const submit = async (event: React.FormEvent) => {
     event.preventDefault(); setError(null);
+    const phone = data.phone.trim();
+    if (!phone) { setError('Số điện thoại không được để trống.'); return; }
     const citizenId = data.citizenId.trim();
     if (!/^\d{12}$/.test(citizenId)) { setError('Số căn cước công dân cần đủ 12 chữ số.'); return; }
     setLoading(true);
     try {
-      const result = await authService.register({ ...data, name: data.name.trim(), username: data.username.trim(), email: data.email.trim(), phone: data.phone.trim() || undefined, address: data.address.trim() || undefined, dob: data.dob || undefined, citizenId });
+      const result = await authService.register({ ...data, name: data.name.trim(), username: data.username.trim(), email: data.email.trim(), phone, address: data.address.trim() || undefined, dob: data.dob, citizenId });
       setAuth(result); router.replace('/dashboard');
     } catch { setError('Không thể tạo tài khoản. Kiểm tra thông tin hoặc thử lại sau.'); setLoading(false); }
   };

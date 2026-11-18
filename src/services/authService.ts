@@ -12,9 +12,9 @@ export interface RegisterParams {
   username: string;
   email: string;
   password?: string;
-  phone?: string;
+  phone: string;
   address?: string;
-  dob?: string;
+  dob: string;
   gender?: string;
   citizenId: string;
   role?: string;
