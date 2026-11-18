@@ -36,13 +36,15 @@ Script được cài tại `/opt/nexclinic/ec2-frontend-deploy.sh`. Nó dùng pr
 
 Chỉ service **frontend** được thay bằng `up --no-build --no-deps`; không build trên EC2, không dừng backend, không đụng database/volumes, không tạo lại proxy. Proxy phải đang chạy và có cùng network với frontend như cấu hình hiện tại. Sau khi frontend healthy, script kiểm tra rồi reload Nginx và xác minh trang chủ + release SHA qua proxy. Vẫn có khoảng gián đoạn lúc thay container; đây không phải blue/green deployment.
 
+EC2 cần có `curl` và bộ CA tin cậy. Bước xác minh dùng HTTPS với hostname mặc định `nexclinic.duckdns.org`, kết nối trực tiếp cổng 443 của Nginx trên host qua `--resolve ...:443:127.0.0.1`. Cách này giữ kiểm tra chứng chỉ/SNI đúng domain, không phụ thuộc DNS công khai từ container proxy và không bị redirect HTTP localhost sang HTTPS sai hostname. Nếu đổi domain, truyền `FRONTEND_HOST` vào môi trường chạy script; Nginx cần publish cổng 443 trên EC2. Không dùng `--insecure` hoặc `--no-check-certificate`; lỗi TLS thật vẫn khiến rollback.
+
 Script giữ image frontend trước dưới tag local `nexclinic-frontend:rollback`. Khi health, reload hoặc kiểm tra revision lỗi, nó khôi phục image trước và reload Nginx; job vẫn báo thất bại. Nếu pull/config lỗi thì chưa thay frontend. Không chạy image prune trong release.
 
 Kiểm tra sau deploy:
 
 ```sh
-curl -fsS http://nexclinic.duckdns.org/release.txt
-curl -fsS http://nexclinic.duckdns.org/actuator/health
+curl -fsS https://nexclinic.duckdns.org/release.txt
+curl -fsS https://nexclinic.duckdns.org/actuator/health
 sudo docker inspect clinic-portal-deploy-frontend-1 --format 'Image={{.Config.Image}} Health={{.State.Health.Status}}'
 ```
 

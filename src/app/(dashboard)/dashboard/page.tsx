@@ -40,7 +40,12 @@ export default function DashboardPage() {
     void load();
     return () => { active = false; };
   }, [isPatient, refresh]);
-  const shortcuts = navigation.filter((item) => ['/appointments', '/doctors', '/medical-records', '/chat', '/patients', '/payments'].includes(item.href) && (!item.roles || hasRole(item.roles))).slice(0, 4);
+  const shortcuts = ['/doctor-schedules', '/appointments', '/doctors', '/patients', '/medical-records', '/chat', '/payments']
+    .flatMap((href) => {
+      const item = navigation.find((entry) => entry.href === href);
+      return item && (!item.roles || hasRole(item.roles)) ? [item] : [];
+    })
+    .slice(0, 4);
   return <AppLayout title="Tổng quan">
     <div className="space-y-8 dashboard-overview">
       <div className="flex flex-wrap items-end justify-between gap-5"><div><p className="eyebrow">{displayDate(clinicDate())}</p><h1 className="mt-3 text-3xl font-medium tracking-tight sm:text-4xl">Xin chào, {user?.name || user?.username || 'bạn'}.</h1><p className="mt-3 text-sm text-slate-500">Hôm nay, dành một chút quan tâm cho sức khỏe.</p></div><Link href="/appointments?book=1" className="btn-primary">Đặt lịch khám</Link></div>
